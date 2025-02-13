@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/xml"
 	"errors"
@@ -27,7 +28,6 @@ type GbxClient struct {
 	Mutex            sync.Mutex
 	RecvData         bytes.Buffer
 	ResponseLength   *uint32
-	RequestHandle    uint32
 	DataPointer      int
 	Options          Options
 	PromiseCallbacks map[uint32]chan interface{}
@@ -39,8 +39,44 @@ type EventEmitter struct {
 	mu     sync.Mutex
 }
 
+type MethodCall struct {
+	MethodName string  `xml:"methodName"`
+	Params     []Param `xml:"params>param"`
+}
+type MethodResponse struct {
+	Params []Param `xml:"params>param"`
+}
+
+type Param struct {
+	Value Value `xml:"value"`
+}
+
+type Value struct {
+	String   string  `xml:"string"`
+	Int      int     `xml:"i4"`
+	Bool     bool    `xml:"boolean"`
+	Float    float64 `xml:"double"`
+	Struct   *Struct `xml:"struct"`
+	Array    *Array  `xml:"array"`
+	Base64   string  `xml:"base64"`
+	DateTime string  `xml:"dateTime.iso8601"`
+}
+
+type Struct struct {
+	Members []Member `xml:"member"`
+}
+
+type Member struct {
+	Name  string `xml:"name"`
+	Value Value  `xml:"value"`
+}
+
+type Array struct {
+	Data []Value `xml:"data>value"`
+}
+
 type XMLParam struct {
-	Value string `xml:"value"`
+	Value string `xml:",innerxml"`
 }
 
 type XMLRequest struct {
@@ -58,14 +94,104 @@ type Callback struct {
 type Deserializer struct{}
 
 func (d *Deserializer) DeserializeMethodResponse(r io.Reader) (interface{}, error) {
-	// Implement XML-RPC or GBXRemote response deserialization logic here
+	var methodResponse MethodResponse
+	decoder := xml.NewDecoder(r)
 
-	return nil, nil
+	// Parse the XML into the methodResponse structure
+	err := decoder.Decode(&methodResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract the struct members from the XML response
+	if len(methodResponse.Params) == 0 {
+		return nil, errors.New("no parameters found")
+	}
+
+	param := methodResponse.Params[0]
+	if param.Value.Struct == nil {
+		return nil, errors.New("no struct found in value")
+	}
+
+	// Map to store the parsed data
+	parsedData := make(map[string]interface{})
+
+	// Iterate through each member of the struct and populate the map
+	for _, member := range param.Value.Struct.Members {
+		// Handle each type of value accordingly
+		switch {
+		case member.Value.String != "":
+			parsedData[member.Name] = member.Value.String
+		case member.Value.Int != 0:
+			parsedData[member.Name] = member.Value.Int
+		case member.Value.Bool:
+			parsedData[member.Name] = member.Value.Bool
+		case member.Value.Float != 0:
+			parsedData[member.Name] = member.Value.Float
+		case member.Value.Struct != nil:
+			parsedData[member.Name] = member.Value.Struct
+		case member.Value.Array != nil:
+			parsedData[member.Name] = member.Value.Array
+		case member.Value.Base64 != "":
+			parsedData[member.Name] = member.Value.Base64
+		case member.Value.DateTime != "":
+			parsedData[member.Name] = member.Value.DateTime
+		}
+	}
+
+	return parsedData, nil
 }
 
 func (d *Deserializer) DeserializeMethodCall(r io.Reader) (string, interface{}, error) {
-	// Implement XML-RPC or GBXRemote method call deserialization logic here
-	return "", nil, nil
+	var methodCall MethodCall
+	decoder := xml.NewDecoder(r)
+
+	// Parse the XML into the methodCall structure
+	err := decoder.Decode(&methodCall)
+	if err != nil {
+		return "", nil, err
+	}
+
+	// If there are no parameters, return the method name and nil for params
+	if len(methodCall.Params) == 0 {
+		return methodCall.MethodName, nil, nil
+	}
+
+	fmt.Println(methodCall.Params, len(methodCall.Params))
+
+	// Parse the parameters
+	params := make([]interface{}, len(methodCall.Params))
+	for i, param := range methodCall.Params {
+		// Here we should process different types of params (string, int, etc.)
+		// For simplicity, let's assume we handle the string and integer types only
+		if param.Value.String != "" {
+			params[i] = param.Value.String
+		} else if param.Value.Int != 0 {
+			params[i] = param.Value.Int
+		} else if param.Value.Bool {
+			params[i] = param.Value.Bool
+		} else if param.Value.Float != 0 {
+			params[i] = param.Value.Float
+		} else if param.Value.Array != nil {
+			// Handle array if necessary
+			params[i] = param.Value.Array
+		} else if param.Value.Base64 != "" {
+			// Handle base64 if necessary
+			params[i] = param.Value.Base64
+		} else if param.Value.DateTime != "" {
+			// Handle dateTime if necessary
+			params[i] = param.Value.DateTime
+		} else if param.Value.Struct != nil {
+			// Handle struct if necessary
+			params[i] = param.Value.Struct
+		} else {
+			return "", nil, errors.New("unsupported parameter type")
+		}
+	}
+
+	fmt.Println("Params:", params)
+
+	return methodCall.MethodName, params, nil
 }
 
 func (e *EventEmitter) On(event string, ch chan interface{}) {
@@ -92,7 +218,7 @@ func NewGbxClient(options Options) *GbxClient {
 		Socket:           nil,
 		RecvData:         bytes.Buffer{},
 		ResponseLength:   nil,
-		RequestHandle:    0x80000000,
+		ReqHandle:        0x80000000,
 		DataPointer:      0,
 		DoHandShake:      false,
 		Options:          options,
@@ -166,7 +292,6 @@ func (client *GbxClient) listen() {
 			return
 		}
 
-		fmt.Println("Received:", string(buffer[:n]))
 		client.handleData(buffer[:n]) // Pass only received data
 	}
 }
@@ -214,22 +339,26 @@ func (g *GbxClient) handleData(data []byte) {
 		} else {
 			deserializer := &Deserializer{}
 			requestHandle := binary.LittleEndian.Uint32(data[:4])
-			fmt.Println("response:", string(data[4:]))
 			readable := bytes.NewReader(data[4:])
 
 			if requestHandle >= 0x80000000 {
 				// Handle method response
+				// fmt.Println(string(data[4:]))
 				res, err := deserializer.DeserializeMethodResponse(readable)
 				if ch, ok := g.PromiseCallbacks[requestHandle]; ok {
 					ch <- []interface{}{res, err}
 					delete(g.PromiseCallbacks, requestHandle)
+				} else {
+					return
 				}
 			} else {
 				// Handle method call
+				fmt.Println(string(data[4:]))
 				method, res, err := deserializer.DeserializeMethodCall(readable)
 				if err != nil {
 					fmt.Println("Error:", err)
 				} else {
+					fmt.Println("Method:", method, res)
 					g.Events.Emit("callback", Callback{Method: method, Res: res})
 					fmt.Println("Callback:", method, res)
 				}
@@ -240,20 +369,9 @@ func (g *GbxClient) handleData(data []byte) {
 		if g.RecvData.Len() > 0 {
 			g.handleData(nil) // Recursively handle remaining data
 		}
+		return
 	}
-}
-
-func (client *GbxClient) Send(method string, params ...interface{}) (interface{}, error) {
-	if !client.IsConnected {
-		return nil, errors.New("not connected")
-	}
-
-	xmlString, err := xmlSerializer(method, params)
-	if err != nil {
-		return nil, err
-	}
-
-	return client.sendRequest(xmlString, false)
+	return
 }
 
 func (client *GbxClient) Call(method string, params ...interface{}) (interface{}, error) {
@@ -266,10 +384,10 @@ func (client *GbxClient) Call(method string, params ...interface{}) (interface{}
 		return nil, err
 	}
 
-	return client.sendRequest(xmlString, true)
+	return client.sendRequest(xmlString)
 }
 
-func (client *GbxClient) sendRequest(xmlString string, wait bool) (interface{}, error) {
+func (client *GbxClient) sendRequest(xmlString string) (interface{}, error) {
 	// if request is more than 4mb
 	if len(xmlString)+8 > 4*1024*1024 {
 		return nil, errors.New("request too large")
@@ -281,6 +399,11 @@ func (client *GbxClient) sendRequest(xmlString string, wait bool) (interface{}, 
 		client.ReqHandle = 0x80000000
 	}
 	handle := client.ReqHandle
+
+	if err := client.addCallback(handle); err != nil {
+		client.Mutex.Unlock()
+		return nil, err
+	}
 	client.Mutex.Unlock()
 
 	len := len(xmlString)
@@ -289,31 +412,24 @@ func (client *GbxClient) sendRequest(xmlString string, wait bool) (interface{}, 
 	binary.LittleEndian.PutUint32(buf[0:], uint32(len))
 	// Write handle as uint32 (Little Endian) at offset 4
 	binary.LittleEndian.PutUint32(buf[4:], handle)
-	requestData, err := xml.Marshal(xmlString)
-	if err != nil {
-		return nil, err
-	}
 	// Copy XML string into the buffer at offset 8
-	copy(buf[8:], []byte(requestData))
-	
-	fmt.Println(string(buf))
-	
-	_, err = client.Socket.Write(buf)
+	copy(buf[8:], []byte(xmlString))
+
+	_, err := client.Socket.Write(buf)
 	if err != nil {
+		client.Mutex.Lock()
 		delete(client.PromiseCallbacks, handle)
+		client.Mutex.Unlock()
 		return nil, err
 	}
-	
-	if (wait) {
-		ch := make(chan interface{}, 1)
-		client.PromiseCallbacks[handle] = ch
 
-		res := <-ch
-		fmt.Println(res)
-		return res, nil
-	}
+	ch := client.PromiseCallbacks[handle]
+	res := <-ch
+	client.Mutex.Lock()
+	delete(client.PromiseCallbacks, handle)
+	client.Mutex.Unlock()
 
-	return nil, nil
+	return res, nil
 }
 
 func xmlSerializer(method string, params []interface{}) (string, error) {
@@ -341,19 +457,50 @@ func xmlSerializer(method string, params []interface{}) (string, error) {
 }
 
 // Helper function to serialize different types
+
 func serializeParam(param interface{}) (string, error) {
 	switch v := param.(type) {
 	case string:
-		return v, nil
+		return fmt.Sprintf("<value><string>%s</string></value>", v), nil
 	case int, int32, int64:
-		return fmt.Sprintf("%d", v), nil
+		return fmt.Sprintf("<value><int>%d</int></value>", v), nil
 	case float32, float64:
-		return fmt.Sprintf("%f", v), nil
+		return fmt.Sprintf("<value><double>%f</double></value>", v), nil
 	case bool:
-		return fmt.Sprintf("%t", v), nil
+		if v {
+			return "<value><boolean>1</boolean></value>", nil
+		}
+		return "<value><boolean>0</boolean></value>", nil
+	case []interface{}: // Handle arrays (slice of values)
+		var values string
+		for _, elem := range v {
+			serializedElem, err := serializeParam(elem)
+			if err != nil {
+				return "", err
+			}
+			values += fmt.Sprintf("<value>%s</value>", serializedElem)
+		}
+		return fmt.Sprintf("<array><data>%s</data></array>", values), nil
+	case []byte: // Handle base64 encoding
+		encoded := base64.StdEncoding.EncodeToString(v)
+		return fmt.Sprintf("<value><base64>%s</base64></value>", encoded), nil
+	case time.Time: // Handle date/time serialization
+		return fmt.Sprintf("<value><dateTime.iso8601>%s</dateTime.iso8601></value>", v.Format("20060102T15:04:05Z")), nil
+	case map[string]interface{}: // Handle struct serialization (map of name-value pairs)
+		var members string
+		for name, value := range v {
+			serializedValue, err := serializeParam(value)
+			if err != nil {
+				return "", err
+			}
+			members += fmt.Sprintf("<member><name>%s</name><value>%s</value></member>", name, serializedValue)
+		}
+		return fmt.Sprintf("<struct>%s</struct>", members), nil
+	case nil: // Handle nil serialization
+		return "<nil/>", nil
 	default:
-		// Handle unknown types here, you can serialize structs or other types as needed
-		return fmt.Sprintf("%v", v), nil
+		// Handle unsupported types explicitly
+		return "", fmt.Errorf("unsupported parameter type: %T", param)
 	}
 }
 

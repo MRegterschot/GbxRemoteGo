@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+
+	models "github.com/MRegterschot/GbxRemoteGo/tmModels"
 )
 
 func main() {
@@ -23,8 +25,8 @@ func main() {
 		return
 	}
 
-	client.Send("SetApiVersion", "2023-04-24")
-	client.Send("EnableCallbacks", true)
+	client.Call("SetApiVersion", "2023-04-24")
+	client.Call("EnableCallbacks", true)
 
 	if _, err := client.Call("Authenticate", "SuperAdmin", "SuperAdmin"); err != nil {
 		fmt.Println(err)
@@ -36,7 +38,11 @@ func main() {
 		fmt.Println(err)
 	}
 
-	fmt.Println(res)
+	fmt.Println("Response:", res)
+
+	if systemInfo, ok := res.(models.TMSystemInfo); ok {
+		fmt.Println("System Info:", systemInfo)
+	}
 
 	select {}
 }
@@ -78,7 +84,7 @@ func handleCallback(eventChan chan interface{}) {
 		select {
 		case event := <-eventChan:
 			if callback, ok := event.(Callback); ok {
-				fmt.Println("Callback received:", callback)
+				fmt.Println("Callback received:", callback.Res)
 			} else {
 				fmt.Println("Invalid event type for callback.")
 			}
