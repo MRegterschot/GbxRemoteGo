@@ -138,7 +138,7 @@ func (g *GbxClient) handleData(data []byte) {
 	return
 }
 
-func (client *GbxClient) sendRequest(xmlString string) PromiseResult {
+func (client *GbxClient) sendRequest(xmlString string, wait bool) PromiseResult {
 	// if request is more than 4mb
 	if len(xmlString)+8 > 4*1024*1024 {
 		return PromiseResult{nil, errors.New("request too large")}
@@ -151,9 +151,11 @@ func (client *GbxClient) sendRequest(xmlString string) PromiseResult {
 	}
 	handle := client.ReqHandle
 
-	if err := client.addCallback(handle); err != nil {
-		client.Mutex.Unlock()
-		return PromiseResult{nil, err}
+	if wait {
+		if err := client.addCallback(handle); err != nil {
+			client.Mutex.Unlock()
+			return PromiseResult{nil, err}
+		}
 	}
 	client.Mutex.Unlock()
 
@@ -172,6 +174,10 @@ func (client *GbxClient) sendRequest(xmlString string) PromiseResult {
 		delete(client.PromiseCallbacks, handle)
 		client.Mutex.Unlock()
 		return PromiseResult{nil, err}
+	}
+
+	if !wait {
+		return PromiseResult{nil, nil}
 	}
 
 	ch := client.PromiseCallbacks[handle]
