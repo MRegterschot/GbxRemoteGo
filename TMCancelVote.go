@@ -2,9 +2,9 @@ package main
 
 import "errors"
 
-// Call a vote for a cmd. The command is a XML string corresponding to an XmlRpc request. Only available to Admin.
-func (client *GbxClient) CallVote(vote string) (bool, error) {
-	res, err := client.Call("CallVote", vote)
+// Cancel the current vote. Only available to Admin.
+func (client *GbxClient) CancelVote() (bool, error) {
+	res, err := client.Call("CancelVote")
 	if err != nil {
 		return false, err
 	}
