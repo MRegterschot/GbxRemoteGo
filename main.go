@@ -28,15 +28,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	if _, err := client.SetApiVersion("2023-04-24"); err != nil {
+	if err := client.SetApiVersion("2023-04-24"); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	if _, err := client.EnableCallbacks(true); err != nil {
+	if err := client.EnableCallbacks(true); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	if _, err := client.Authenticate("SuperAdmin", "SuperAdmin"); err != nil {
+	if err := client.Authenticate("SuperAdmin", "SuperAdmin"); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
