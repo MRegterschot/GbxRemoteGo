@@ -54,6 +54,8 @@ type Array struct {
 	Data []Value `xml:"data>value"`
 }
 
+type CData string
+
 type XMLParam struct {
 	Value string `xml:",innerxml"`
 }
@@ -182,6 +184,8 @@ func serializeParam(param interface{}) (string, error) {
 			members += fmt.Sprintf("<member><name>%s</name><value>%s</value></member>", name, serializedValue)
 		}
 		return fmt.Sprintf("<struct>%s</struct>", members), nil
+	case CData: // Handle CDATA serialization
+		return fmt.Sprintf("<value><string><![CDATA[%s]]></string></value>", v), nil
 	case nil: // Handle nil serialization
 		return "<nil/>", nil
 	default:

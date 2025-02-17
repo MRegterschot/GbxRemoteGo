@@ -56,7 +56,7 @@ func (client *GbxClient) Call(method string, params ...interface{}) (interface{}
 	if err != nil {
 		return nil, err
 	}
-	
+
 	res := client.sendRequest(xmlString, true)
 	return res.Result, res.Error
 }
