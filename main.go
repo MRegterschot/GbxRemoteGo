@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
-
-	models "github.com/MRegterschot/GbxRemoteGo/tmModels"
+	"os"
 )
 
 func main() {
+	// Create a new GbxClient
 	client := NewGbxClient(Options{})
+
+	// Register event handlers
 	onConnectionChan := make(chan interface{})
 	client.Events.On("connect", onConnectionChan)
 	go handleConnect(onConnectionChan)
@@ -20,28 +22,23 @@ func main() {
 	client.Events.On("callback", onCallbackChan)
 	go handleCallback(onCallbackChan)
 
+	// Connect to the server
 	if err := client.Connect("127.0.0.1", 5000); err != nil {
 		fmt.Println(err)
-		return
+		os.Exit(1)
 	}
 
-	client.Call("SetApiVersion", "2023-04-24")
-	client.Call("EnableCallbacks", true)
-
-	if _, err := client.Call("Authenticate", "SuperAdmin", "SuperAdmin"); err != nil {
+	if _, err := client.SetApiVersion("2023-04-24"); err != nil {
 		fmt.Println(err)
-		return
+		os.Exit(1)
 	}
-
-	res, err := client.Call("GetSystemInfo")
-	if err != nil {
+	if _, err := client.EnableCallbacks(true); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
-
-	fmt.Println("Response:", res)
-
-	if systemInfo, ok := res.(models.TMSystemInfo); ok {
-		fmt.Println("System Info:", systemInfo)
+	if _, err := client.Authenticate("SuperAdmin", "SuperAdmin"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	select {}
