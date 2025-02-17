@@ -57,7 +57,21 @@ func (client *GbxClient) Call(method string, params ...interface{}) (interface{}
 		return nil, err
 	}
 	
-	res := client.sendRequest(xmlString)
+	res := client.sendRequest(xmlString, true)
+	return res.Result, res.Error
+}
+
+func (client *GbxClient) Send(method string, params ...interface{}) (interface{}, error) {
+	if !client.IsConnected {
+		return nil, errors.New("not connected")
+	}
+
+	xmlString, err := xmlSerializer(method, params)
+	if err != nil {
+		return nil, err
+	}
+	
+	res := client.sendRequest(xmlString, false)
 	return res.Result, res.Error
 }
 
