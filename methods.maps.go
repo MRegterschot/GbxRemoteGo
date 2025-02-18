@@ -108,7 +108,7 @@ func (client *GbxClient) GetMapInfo(filename string) (structs.TMMapInfo, error) 
 	return mapInfo, nil
 }
 
-// Returns a boolean if the map with the specified filename matches the current server settings. 
+// Returns a boolean if the map with the specified filename matches the current server settings.
 func (client *GbxClient) CheckMapForCurrentServerParams(filename string) (bool, error) {
 	res, err := client.Call("CheckMapForCurrentServerParams", filename)
 	if err != nil {
@@ -121,4 +121,53 @@ func (client *GbxClient) CheckMapForCurrentServerParams(filename string) (bool, 
 	}
 
 	return data, nil
+}
+
+// Returns a list of maps among the current selection of the server. This method take two parameters. The first parameter specifies the maximum number of infos to be returned, and the second one the starting index in the selection. The list is an array of structures. Each structure contains the following fields : Name, UId, FileName, Environnement, Author, AuthorNickname, GoldTime, CopperPrice, MapType, MapStyle.
+func (client *GbxClient) GetMapList(max int, startIndex int) ([]structs.TMMapInfo, error) {
+	res, err := client.Call("GetMapList", max, startIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	var mapList []structs.TMMapInfo
+	err = convertToStruct(res, &mapList)
+	if err != nil {
+		return nil, err
+	}
+
+	return mapList, nil
+}
+
+// Add the map with the specified filename at the end of the current selection. Only available to Admin.
+func (client *GbxClient) AddMap(filename string) error {
+	_, err := client.Call("AddMap", filename)
+	return err
+}
+
+// Add the list of maps with the specified filenames at the end of the current selection. The list of maps to add is an array of strings. Only available to Admin.
+func (client *GbxClient) AddMapList(filenames []string) (int, error) {
+	res, err := client.Call("AddMapList", filenames)
+	if err != nil {
+		return 0, err
+	}
+
+	data, ok := res.(int)
+	if !ok {
+		return 0, errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
+
+// Remove the map with the specified filename from the current selection. Only available to Admin.
+func (client *GbxClient) RemoveMap(filename string) error {
+	_, err := client.Call("RemoveMap", filename)
+	return err
+}
+
+// Remove the list of maps with the specified filenames from the current selection. The list of maps to remove is an array of strings. Only available to Admin.
+func (client *GbxClient) RemoveMapList(filenames []string) error {
+	_, err := client.Call("RemoveMapList", filenames)
+	return err
 }

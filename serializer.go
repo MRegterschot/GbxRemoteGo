@@ -181,31 +181,11 @@ func serializeParam(param interface{}) (string, error) {
 			return "<value><boolean>1</boolean></value>", nil
 		}
 		return "<value><boolean>0</boolean></value>", nil
-	case []interface{}: // Handle arrays (slice of values)
-		var values string
-		for _, elem := range v {
-			serializedElem, err := serializeParam(elem)
-			if err != nil {
-				return "", err
-			}
-			values += fmt.Sprintf("%s", serializedElem)
-		}
-		return fmt.Sprintf("<value><array><data>%s</data></array></value>", values), nil
 	case []byte: // Handle base64 encoding
 		encoded := base64.StdEncoding.EncodeToString(v)
 		return fmt.Sprintf("<value><base64>%s</base64></value>", encoded), nil
 	case time.Time: // Handle date/time serialization
 		return fmt.Sprintf("<value><dateTime.iso8601>%s</dateTime.iso8601></value>", v.Format("20060102T15:04:05Z")), nil
-	case map[string]interface{}: // Handle struct serialization (map of name-value pairs)
-		var members string
-		for name, value := range v {
-			serializedValue, err := serializeParam(value)
-			if err != nil {
-				return "", err
-			}
-			members += fmt.Sprintf("<member><name>%s</name>%s</member>", name, serializedValue)
-		}
-		return fmt.Sprintf("<value><struct>%s</struct></value>", members), nil
 	case CData: // Handle CDATA serialization
 		return fmt.Sprintf("<value><string><![CDATA[%s]]></string></value>", v), nil
 	case nil: // Handle nil serialization
@@ -213,6 +193,22 @@ func serializeParam(param interface{}) (string, error) {
 	default:
 		// Handle custom structs using reflection
 		val := reflect.ValueOf(param)
+
+		// Handle slices (arrays)
+		if val.Kind() == reflect.Slice {
+			var values string
+			for i := 0; i < val.Len(); i++ {
+				elem := val.Index(i).Interface()
+				serializedElem, err := serializeParam(elem)
+				if err != nil {
+					return "", err
+				}
+				values += fmt.Sprintf("%s", serializedElem)
+			}
+			return fmt.Sprintf("<value><array><data>%s</data></array></value>", values), nil
+		}
+
+		// Handle structs
 		if val.Kind() == reflect.Struct {
 			var members string
 			for i := 0; i < val.NumField(); i++ {
