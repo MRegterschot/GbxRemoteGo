@@ -59,7 +59,7 @@ func (client *GbxClient) listen() {
 			fmt.Println("Read error:", err)
 			return
 		}
-		fmt.Println("Received data:", string(buffer[:n]))
+		// fmt.Println("Received data:", string(buffer[:n]))
 		client.handleData(buffer[:n]) // Pass only received data
 	}
 }
