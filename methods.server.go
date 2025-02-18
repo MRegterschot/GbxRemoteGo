@@ -395,3 +395,25 @@ func (client *GbxClient) AreProfileSkinsDisabled() (bool, error) {
 
 	return data, nil
 }
+
+// 	Enable the autosaving of all replays (vizualisable replays with all players, but not validable) on the server. Only available to SuperAdmin.
+func (client *GbxClient) AutoSaveReplays(enable bool) error {
+	_, err := client.Call("AutoSaveReplays", enable)
+	return err
+}
+
+// Returns if autosaving of all replays is enabled on the server.
+func (client *GbxClient) IsAutoSaveReplaysEnabled() (bool, error) {
+	res, err := client.Call("IsAutoSaveReplaysEnabled")
+	if err != nil {
+		return false, err
+	}
+
+	// Ensure the response is a bool
+	data, ok := res.(bool)
+	if !ok {
+		return false, errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
