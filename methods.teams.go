@@ -34,3 +34,32 @@ func (client *GbxClient) GetTeamInfo(clanID int) (structs.TMTeamInfo, error) {
 
 	return team, nil
 }
+
+// Set the clublinks to use for the two clans. Only available to Admin.
+func (client *GbxClient) SetForcedClubLinks(clubLink1 string, clubLink2 string) error {
+	_, err := client.Call("SetForcedClubLinks", clubLink1, clubLink2)
+	return err
+}
+
+// Get the forced clublinks.
+func (client *GbxClient) GetForcedClubLinks() (structs.TMForcedClubLinks, error) {
+	res, err := client.Call("GetForcedClubLinks")
+	if err != nil {
+		return structs.TMForcedClubLinks{}, err
+	}
+
+	// Ensure the response is a struct
+	data, ok := res.(map[string]interface{})
+	if !ok {
+		return structs.TMForcedClubLinks{}, errors.New("unexpected response format")
+	}
+
+	// Convert struct to TMForcedClubLinks
+	var links structs.TMForcedClubLinks
+	err = convertToStruct(data, &links)
+	if err != nil {
+		return structs.TMForcedClubLinks{}, err
+	}
+
+	return links, nil
+}

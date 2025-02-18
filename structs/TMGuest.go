@@ -1,5 +1,5 @@
 package structs
 
-type PlayerInfo struct {
+type TMPlayerInfo struct {
 	Login string `json:"Login" xmlrpc:"Login"`
 }

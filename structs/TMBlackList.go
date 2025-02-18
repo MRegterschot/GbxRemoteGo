@@ -1,5 +1,5 @@
 package structs
 
-type BlackList struct {
+type TMBlackList struct {
 	Login string `json:"Login" xmlrpc:"Login"`
 }
