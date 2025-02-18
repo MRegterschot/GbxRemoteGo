@@ -373,3 +373,25 @@ func (client *GbxClient) AreServiceAnnouncesDisabled() (bool, error) {
 
 	return data, nil
 }
+
+// Ignore players profile skin customisation. Only available to Admin.
+func (client *GbxClient) DisableProfileSkins(disable bool) error {
+	_, err := client.Call("DisableProfileSkins", disable)
+	return err
+}
+
+// Returns whether the custom skins are disabled.
+func (client *GbxClient) AreProfileSkinsDisabled() (bool, error) {
+	res, err := client.Call("AreProfileSkinsDisabled")
+	if err != nil {
+		return false, err
+	}
+
+	// Ensure the response is a bool
+	data, ok := res.(bool)
+	if !ok {
+		return false, errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
