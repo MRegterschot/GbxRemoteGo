@@ -31,14 +31,6 @@ type TMServerTag struct {
 	Value string `json:"Value" xmlrpc:"Value"`
 }
 
-type TMServerVisibility int
-
-const (
-	TMServerVisible TMServerVisibility = iota
-	TMServerHidden
-	TMServerHiddenFromNations
-)
-
 type TMMaxPlayers struct {
 	CurrentValue int `json:"CurrentValue" xmlrpc:"CurrentValue"`
 	NextValue    int `json:"NextValue" xmlrpc:"NextValue"`
