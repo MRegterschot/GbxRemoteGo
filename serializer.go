@@ -162,6 +162,15 @@ func xmlSerializer(method string, params []interface{}) (string, error) {
 
 // Helper function to serialize different types
 func serializeParam(param interface{}) (string, error) {
+	// Handle pointers by dereferencing them if not nil
+	val := reflect.ValueOf(param)
+	if val.Kind() == reflect.Ptr {
+		if val.IsNil() {
+			return "", nil // Represent nil pointers as <nil/>
+		}
+		return serializeParam(val.Elem().Interface()) // Dereference and reprocess
+	}
+
 	switch v := param.(type) {
 	case string:
 		return fmt.Sprintf("<value><string>%s</string></value>", v), nil
@@ -183,7 +192,7 @@ func serializeParam(param interface{}) (string, error) {
 			}
 			values += fmt.Sprintf("<value>%s</value>", serializedElem)
 		}
-		return fmt.Sprintf("<array><data>%s</data></array>", values), nil
+		return fmt.Sprintf("<value><array><data>%s</data></array></value>", values), nil
 	case []byte: // Handle base64 encoding
 		encoded := base64.StdEncoding.EncodeToString(v)
 		return fmt.Sprintf("<value><base64>%s</base64></value>", encoded), nil
@@ -198,12 +207,31 @@ func serializeParam(param interface{}) (string, error) {
 			}
 			members += fmt.Sprintf("<member><name>%s</name><value>%s</value></member>", name, serializedValue)
 		}
-		return fmt.Sprintf("<struct>%s</struct>", members), nil
+		return fmt.Sprintf("<value><struct>%s</struct></value>", members), nil
 	case CData: // Handle CDATA serialization
 		return fmt.Sprintf("<value><string><![CDATA[%s]]></string></value>", v), nil
 	case nil: // Handle nil serialization
 		return "<nil/>", nil
 	default:
+		// Handle custom structs using reflection
+		val := reflect.ValueOf(param)
+		if val.Kind() == reflect.Struct {
+			var members string
+			for i := 0; i < val.NumField(); i++ {
+				field := val.Type().Field(i)
+				fieldInterface := val.Field(i).Interface()
+				fieldValue := reflect.ValueOf(fieldInterface)
+				if fieldValue.Kind() == reflect.Ptr && fieldValue.IsNil() {
+					continue // Skip zero values
+				}
+				serializedValue, err := serializeParam(fieldInterface)
+				if err != nil {
+					return "", err
+				}
+				members += fmt.Sprintf("<member><name>%s</name>%s</member>", field.Name, serializedValue)
+			}
+			return fmt.Sprintf("<value><struct>%s</struct></value>", members), nil
+		}
 		// Handle unsupported types explicitly
 		return "", fmt.Errorf("unsupported parameter type: %T", param)
 	}

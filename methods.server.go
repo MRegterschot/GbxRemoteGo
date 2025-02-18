@@ -424,7 +424,7 @@ func (client *GbxClient) SaveCurrentReplay(filename string) error {
 	return err
 }
 
-// Saves a replay with the ghost of all the players' best race. First parameter is the login of the player (or '' for all players), Second parameter is the filename, or '' for an automatic filename. Only available to Admin.
+// Saves a replay with the ghost of all the players' best race. First parameter is the login of the player (or ” for all players), Second parameter is the filename, or ” for an automatic filename. Only available to Admin.
 func (client *GbxClient) SaveBestGhostsReplay(login string, filename string) error {
 	_, err := client.Call("SaveBestGhostsReplay", login, filename)
 	return err
@@ -444,4 +444,26 @@ func (client *GbxClient) GetValidationReplay(login string) (string, error) {
 	}
 
 	return data, nil
+}
+
+// Set new server options using the struct passed as parameters. This struct must contain the following fields : Name, Comment, Password, PasswordForSpectator, NextCallVoteTimeOut, CallVoteRatio. May additionally include any of the other members listed in RpcGetServerOptions. Only available to Admin. A change of NextMaxPlayers, NextMaxSpectators, NextCallVoteTimeOut requires a map restart to be taken into account.
+func (client *GbxClient) SetServerOptions(options structs.TMServerOptionsRequest) error {
+	_, err := client.Call("SetServerOptions", options)
+	return err
+}
+
+// Returns a struct containing the server options: Name, Comment, Password, PasswordForSpectator, HideServer, CurrentMaxPlayers, NextMaxPlayers, CurrentMaxSpectators, NextMaxSpectators, KeepPlayerSlots, CurrentCallVoteTimeOut, NextCallVoteTimeOut, CallVoteRatio, AllowMapDownload, AutoSaveReplays, ClientInputsMaxLatency, DisableHorns, DisableServiceAnnounces,PacketAssembly_PacketsPerFrame, PacketAssembly_FullPacketsPerFrame, TrustClientSimu_ClientToServer_SendingRate, DelayedVisuals_ServerToClient_SendingRate.
+func (client *GbxClient) GetServerOptions() (structs.TMServerOptions, error) {
+	res, err := client.Call("GetServerOptions")
+	if err != nil {
+		return structs.TMServerOptions{}, err
+	}
+
+	var serverOptions structs.TMServerOptions
+	err = convertToStruct(res, &serverOptions)
+	if err != nil {
+		return structs.TMServerOptions{}, err
+	}
+
+	return serverOptions, nil
 }
