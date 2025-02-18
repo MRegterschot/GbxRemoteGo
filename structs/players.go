@@ -80,3 +80,16 @@ type TMZoneRanking struct {
 	Ranking    int     `json:"Ranking" xmlrpc:"Ranking"`
 	TotalCount int     `json:"TotalCount" xmlrpc:"TotalCount"`
 }
+
+type TMPlayerRanking struct {
+	Login    string `json:"Login" xmlrpc:"Login"`
+	NickName string `json:"NickName" xmlrpc:"NickName"`
+	PlayerId int    `json:"PlayerId" xmlrpc:"PlayerId"`
+	Rank     int    `json:"Rank" xmlrpc:"Rank"`
+
+	BestTime        int     `json:"BestTime" xmlrpc:"BestTime"`               // Deprecated
+	BestCheckpoints []int   `json:"BestCheckpoints" xmlrpc:"BestCheckpoints"` // Deprecated
+	Score           int     `json:"Score" xmlrpc:"Score"`                     // Deprecated
+	NbrLapsFinished int     `json:"NbrLapsFinished" xmlrpc:"NbrLapsFinished"` // Deprecated
+	LadderScore     float32 `json:"LadderScore" xmlrpc:"LadderScore"`         // Deprecated
+}

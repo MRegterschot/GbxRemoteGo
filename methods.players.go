@@ -1,6 +1,10 @@
 package main
 
-import "github.com/MRegterschot/GbxRemoteGo/structs"
+import (
+	"errors"
+
+	"github.com/MRegterschot/GbxRemoteGo/structs"
+)
 
 // Ban the player with the specified login, with an optional message. Only available to Admin.
 func (client *GbxClient) Ban(login string, reason string) error {
@@ -265,4 +269,51 @@ func (client *GbxClient) GetMainServerPlayerInfo(version ...int) (structs.TMPlay
 	}
 
 	return playerInfo, nil
+}
+
+// Returns the current rankings for the race in progress. (In trackmania legacy team modes, the scores for the two teams are returned. In other modes, it's the individual players' scores) This method take two parameters. The first parameter specifies the maximum number of infos to be returned, and the second one the starting index in the ranking. The ranking returned is a list of structures. Each structure contains the following fields : Login, NickName, PlayerId and Rank. In addition, for legacy trackmania modes it also contains BestTime, Score, NbrLapsFinished, LadderScore, and an array BestCheckpoints that contains the checkpoint times for the best race.
+func (client *GbxClient) GetCurrentRanking(max int, start int) ([]structs.TMPlayerRanking, error) {
+	res, err := client.Call("GetCurrentRanking", max, start)
+	if err != nil {
+		return []structs.TMPlayerRanking{}, err
+	}
+
+	var playerList []structs.TMPlayerRanking
+	err = convertToStruct(res, &playerList)
+	if err != nil {
+		return []structs.TMPlayerRanking{}, err
+	}
+
+	return playerList, nil
+}
+
+// Returns the current ranking for the race in progressof the player with the specified login (or list of comma-separated logins). The ranking returned is a list of structures. Each structure contains the following fields : Login, NickName, PlayerId and Rank. In addition, for legacy trackmania modes it also contains BestTime, Score, NbrLapsFinished, LadderScore, and an array BestCheckpoints that contains the checkpoint times for the best race.
+func (client *GbxClient) GetCurrentRankingForLogin(login string) ([]structs.TMPlayerRanking, error) {
+	res, err := client.Call("GetCurrentRankingForLogin", login)
+	if err != nil {
+		return []structs.TMPlayerRanking{}, err
+	}
+
+	var playerList []structs.TMPlayerRanking
+	err = convertToStruct(res, &playerList)
+	if err != nil {
+		return []structs.TMPlayerRanking{}, err
+	}
+
+	return playerList, nil
+}
+
+// Returns the current winning team for the race in progress. (-1: if not in team mode, or draw match)
+func (client *GbxClient) GetCurrentWinnerTeam() (int, error) {
+	res, err := client.Call("GetCurrentWinnerTeam")
+	if err != nil {
+		return 0, err
+	}
+
+	data, ok := res.(int)
+	if !ok {
+		return 0, errors.New("unexpected response format")
+	}
+
+	return data, nil
 }
