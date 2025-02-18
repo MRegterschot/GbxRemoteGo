@@ -63,3 +63,25 @@ func (client *GbxClient) GetForcedClubLinks() (structs.TMForcedClubLinks, error)
 
 	return links, nil
 }
+
+// Set whether the players can choose their side or if the teams are forced by the server (using ForcePlayerTeam()). Only available to Admin.
+func (client *GbxClient) SetForcedTeams(forced bool) error {
+	_, err := client.Call("SetForcedTeams", forced)
+	return err
+}
+
+// Returns whether the players can choose their side or if the teams are forced by the server.
+func (client *GbxClient) GetForcedTeams() (bool, error) {
+	res, err := client.Call("GetForcedTeams")
+	if err != nil {
+		return false, err
+	}
+
+	// Ensure the response is a bool
+	data, ok := res.(bool)
+	if !ok {
+		return false, errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
