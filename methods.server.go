@@ -489,3 +489,15 @@ func (client *GbxClient) GetNetworkStats() (structs.TMNetworkStats, error) {
 
 	return networkStats, nil
 }
+
+// Start a server on lan, using the current configuration. Only available to SuperAdmin.
+func (client *GbxClient) StartServerLan() error {
+	_, err := client.Call("StartServerLan")
+	return err
+}
+
+// Start a server on internet, using the current configuration. Only available to SuperAdmin.
+func (client *GbxClient) StartServerInternet() error {
+	_, err := client.Call("StartServerInternet")
+	return err
+}
