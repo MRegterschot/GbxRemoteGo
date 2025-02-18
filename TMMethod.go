@@ -1,12 +1,48 @@
 package main
 
-import (
-	"errors"
-)
+import "errors"
 
 type TMMethodSignature struct {
 	ReturnType string
 	ParamTypes []string
+}
+
+// Return an array of all available XML-RPC methods on this server.
+func (client *GbxClient) ListMethods() ([]string, error) {
+	res, err := client.Call("system.listMethods")
+	if err != nil {
+		return nil, err
+	}
+
+	// Ensure the response is a slice
+	data, ok := res.([]interface{})
+	if !ok {
+		return nil, errors.New("unexpected response format")
+	}
+
+	// Convert slice to []string
+	methods := make([]string, len(data))
+	for i, v := range data {
+		methods[i] = v.(string)
+	}
+
+	return methods, nil
+}
+
+// Given the name of a method, return a help string.
+func (client *GbxClient) MethodHelp(method string) (string, error) {
+	res, err := client.Call("system.methodHelp", method)
+	if err != nil {
+		return "", err
+	}
+
+	// Ensure the response is a string
+	data, ok := res.(string)
+	if !ok {
+		return "", errors.New("unexpected response format")
+	}
+
+	return data, nil
 }
 
 // Given the name of a method, return an array of legal signatures. Each signature is an array of strings. The first item of each signature is the return type, and any others items are parameter types.
