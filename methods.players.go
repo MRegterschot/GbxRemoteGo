@@ -1,8 +1,6 @@
 package main
 
 import (
-	"errors"
-
 	"github.com/MRegterschot/GbxRemoteGo/structs"
 )
 
@@ -303,17 +301,48 @@ func (client *GbxClient) GetCurrentRankingForLogin(login string) ([]structs.TMPl
 	return playerList, nil
 }
 
-// Returns the current winning team for the race in progress. (-1: if not in team mode, or draw match)
-func (client *GbxClient) GetCurrentWinnerTeam() (int, error) {
-	res, err := client.Call("GetCurrentWinnerTeam")
-	if err != nil {
-		return 0, err
+// Force the scores of the current game. Only available in rounds and team mode. You have to pass an array of structs {int PlayerId, int Score}. And a boolean SilentMode - if true, the scores are silently updated (only available for SuperAdmin), allowing an external controller to do its custom counting... Only available to Admin/SuperAdmin.
+func (client *GbxClient) ForceScores(scores []structs.TMPlayerScore, silentMode ...bool) error {
+	var param bool = false
+	if len(silentMode) > 0 {
+		param = silentMode[0]
 	}
+	_, err := client.Call("ForceScores", scores, param)
+	return err
+}
 
-	data, ok := res.(int)
-	if !ok {
-		return 0, errors.New("unexpected response format")
-	}
+// Force the spectating status of the player. You have to pass the login and the spectator mode (0: user selectable, 1: spectator, 2: player, 3: spectator but keep selectable). Only available to Admin.
+func (client *GbxClient) ForceSpectator(login string, status int) error {
+	_, err := client.Call("ForceSpectator", login, status)
+	return err
+}
 
-	return data, nil
+// Force the spectating status of the player. You have to pass the playerid and the spectator mode (0: user selectable, 1: spectator, 2: player, 3: spectator but keep selectable). Only available to Admin.
+func (client *GbxClient) ForceSpectatorId(id int, status int) error {
+	_, err := client.Call("ForceSpectatorId", id, status)
+	return err
+}
+
+// Force spectators to look at a specific player. You have to pass the login of the spectator (or '' for all) and the login of the target (or '' for automatic), and an integer for the camera type to use (-1 = leave unchanged, 0 = replay, 1 = follow, 2 = free). Only available to Admin.
+func (client *GbxClient) ForceSpectatorTarget(spectator string, target string, cameraType int) error {
+	_, err := client.Call("ForceSpectatorTarget", spectator, target, cameraType)
+	return err
+}
+
+// Force spectators to look at a specific player. You have to pass the id of the spectator (or -1 for all) and the id of the target (or -1 for automatic), and an integer for the camera type to use (-1 = leave unchanged, 0 = replay, 1 = follow, 2 = free). Only available to Admin.
+func (client *GbxClient) ForceSpectatorTargetId(spectator int, target int, cameraType int) error {
+	_, err := client.Call("ForceSpectatorTargetId", spectator, target, cameraType)
+	return err
+}
+
+// Pass the login of the spectator. A spectator that once was a player keeps his player slot, so that he can go back to race mode. Calling this function frees this slot for another player to connect. Only available to Admin.
+func (client *GbxClient) SpectatorReleasePlayerSlot(login string) error {
+	_, err := client.Call("SpectatorReleasePlayerSlot", login)
+	return err
+}
+
+// Pass the playerid of the spectator. A spectator that once was a player keeps his player slot, so that he can go back to race mode. Calling this function frees this slot for another player to connect. Only available to Admin.
+func (client *GbxClient) SpectatorReleasePlayerSlotId(id int) error {
+	_, err := client.Call("SpectatorReleasePlayerSlotId", id)
+	return err
 }

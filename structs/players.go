@@ -93,3 +93,8 @@ type TMPlayerRanking struct {
 	NbrLapsFinished int     `json:"NbrLapsFinished" xmlrpc:"NbrLapsFinished"` // Deprecated
 	LadderScore     float32 `json:"LadderScore" xmlrpc:"LadderScore"`         // Deprecated
 }
+
+type TMPlayerScore struct {
+	PlayerId int `json:"PlayerId" xmlrpc:"PlayerId"`
+	Score    int `json:"Score" xmlrpc:"Score"`
+}
