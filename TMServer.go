@@ -171,3 +171,47 @@ func (client *GbxClient) GetHideServer() (structs.TMServerVisibility, error) {
 
 	return structs.TMServerVisibility(data), nil
 }
+
+// Set a new password for the server. Only available to Admin.
+func (client *GbxClient) SetServerPassword(password string) error {
+	_, err := client.Call("SetServerPassword", password)
+	return err
+}
+
+// Get the server password if called as Admin or Super Admin, else returns if a password is needed or not.
+func (client *GbxClient) GetServerPassword() (string, error) {
+	res, err := client.Call("GetServerPassword")
+	if err != nil {
+		return "", err
+	}
+
+	// Ensure the response is a string
+	data, ok := res.(string)
+	if !ok {
+		return "", errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
+
+// Set a new password for the spectator mode. Only available to Admin.
+func (client *GbxClient) SetServerPasswordForSpectator(password string) error {
+	_, err := client.Call("SetServerPasswordForSpectator", password)
+	return err
+}
+
+// Get the password for spectator mode if called as Admin or Super Admin, else returns if a password is needed or not.
+func (client *GbxClient) GetServerPasswordForSpectator() (string, error) {
+	res, err := client.Call("GetServerPasswordForSpectator")
+	if err != nil {
+		return "", err
+	}
+
+	// Ensure the response is a string
+	data, ok := res.(string)
+	if !ok {
+		return "", errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
