@@ -107,3 +107,18 @@ func (client *GbxClient) GetMapInfo(filename string) (structs.TMMapInfo, error) 
 
 	return mapInfo, nil
 }
+
+// Returns a boolean if the map with the specified filename matches the current server settings. 
+func (client *GbxClient) CheckMapForCurrentServerParams(filename string) (bool, error) {
+	res, err := client.Call("CheckMapForCurrentServerParams", filename)
+	if err != nil {
+		return false, err
+	}
+
+	data, ok := res.(bool)
+	if !ok {
+		return false, errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
