@@ -396,7 +396,7 @@ func (client *GbxClient) AreProfileSkinsDisabled() (bool, error) {
 	return data, nil
 }
 
-// 	Enable the autosaving of all replays (vizualisable replays with all players, but not validable) on the server. Only available to SuperAdmin.
+// Enable the autosaving of all replays (vizualisable replays with all players, but not validable) on the server. Only available to SuperAdmin.
 func (client *GbxClient) AutoSaveReplays(enable bool) error {
 	_, err := client.Call("AutoSaveReplays", enable)
 	return err
@@ -416,4 +416,16 @@ func (client *GbxClient) IsAutoSaveReplaysEnabled() (bool, error) {
 	}
 
 	return data, nil
+}
+
+// Saves the current replay (vizualisable replays with all players, but not validable). Pass a filename, or ” for an automatic filename. Only available to Admin.
+func (client *GbxClient) SaveCurrentReplay(filename string) error {
+	_, err := client.Call("SaveCurrentReplay", filename)
+	return err
+}
+
+// Saves a replay with the ghost of all the players' best race. First parameter is the login of the player (or '' for all players), Second parameter is the filename, or '' for an automatic filename. Only available to Admin.
+func (client *GbxClient) SaveBestGhostsReplay(login string, filename string) error {
+	_, err := client.Call("SaveBestGhostsReplay", login, filename)
+	return err
 }
