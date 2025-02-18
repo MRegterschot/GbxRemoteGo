@@ -27,7 +27,6 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
 	if err := client.SetApiVersion("2023-04-24"); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -40,6 +39,17 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
+	// if err := client.JumpToMapIndex(2); err != nil {
+	// 	fmt.Println(err)
+	// }
+
+	res, err := client.AddMapList([]string{"My Maps/Beryllium.Map.Gbx"})
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(res)
 
 	select {}
 }

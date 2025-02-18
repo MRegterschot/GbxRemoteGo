@@ -167,7 +167,37 @@ func (client *GbxClient) RemoveMap(filename string) error {
 }
 
 // Remove the list of maps with the specified filenames from the current selection. The list of maps to remove is an array of strings. Only available to Admin.
-func (client *GbxClient) RemoveMapList(filenames []string) error {
-	_, err := client.Call("RemoveMapList", filenames)
+func (client *GbxClient) RemoveMapList(filenames []string) (int, error) {
+	res, err := client.Call("RemoveMapList", filenames)
+	if err != nil {
+		return 0, err
+	}
+
+	data, ok := res.(int)
+	if !ok {
+		return 0, errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
+
+// Insert the map with the specified filename after the current map. Only available to Admin.
+func (client *GbxClient) InsertMap(filename string) error {
+	_, err := client.Call("InsertMap", filename)
 	return err
+}
+
+// Insert the list of maps with the specified filenames after the current map. The list of maps to insert is an array of strings. Only available to Admin.
+func (client *GbxClient) InsertMapList(filenames []string) (int, error) {
+	res, err := client.Call("InsertMapList", filenames)
+	if err != nil {
+		return 0, err
+	}
+
+	data, ok := res.(int)
+	if !ok {
+		return 0, errors.New("unexpected response format")
+	}
+
+	return data, nil
 }
