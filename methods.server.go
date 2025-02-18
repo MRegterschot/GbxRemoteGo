@@ -351,3 +351,25 @@ func (client *GbxClient) AreHornsDisabled() (bool, error) {
 
 	return data, nil
 }
+
+// Disable the automatic mesages when a player connects/disconnects from the server. Only available to Admin.
+func (client *GbxClient) DisableServiceAnnounces(disable bool) error {
+	_, err := client.Call("DisableServiceAnnounces", disable)
+	return err
+}
+
+// Returns whether the automatic mesages are disabled.
+func (client *GbxClient) AreServiceAnnouncesDisabled() (bool, error) {
+	res, err := client.Call("AreServiceAnnouncesDisabled")
+	if err != nil {
+		return false, err
+	}
+
+	// Ensure the response is a bool
+	data, ok := res.(bool)
+	if !ok {
+		return false, errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
