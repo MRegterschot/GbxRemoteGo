@@ -467,3 +467,9 @@ func (client *GbxClient) GetServerOptions() (structs.TMServerOptions, error) {
 
 	return serverOptions, nil
 }
+
+// Stop the server. Only available to SuperAdmin.
+func (client *GbxClient) StopServer() error {
+	_, err := client.Call("StopServer")
+	return err
+}

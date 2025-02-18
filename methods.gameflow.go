@@ -19,3 +19,9 @@ func (client *GbxClient) NextMap(dontClearCupScores ...bool) error {
 	_, err := client.Call("NextMap", param)
 	return err
 }
+
+// Attempt to balance teams. Only available to Admin.
+func (client *GbxClient) AutoTeamBalance() error {
+	_, err := client.Call("AutoTeamBalance")
+	return err
+}
