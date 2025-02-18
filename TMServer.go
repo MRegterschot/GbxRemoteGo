@@ -259,3 +259,25 @@ func (client *GbxClient) GetMaxSpectators() (structs.TMMaxSpectators, error) {
 
 	return maxSpectators, nil
 }
+
+// Set whether, when a player is switching to spectator, the server should still consider him a player and keep his player slot, or not. Only available to Admin.
+func (client *GbxClient) KeepPlayerSlots(keepPlayerSlots bool) error {
+	_, err := client.Call("KeepPlayerSlots", keepPlayerSlots)
+	return err
+}
+
+// Get whether the server keeps player slots when switching to spectator.
+func (client *GbxClient) IsKeepingPlayerSlots() (bool, error) {
+	res, err := client.Call("IsKeepingPlayerSlots")
+	if err != nil {
+		return false, err
+	}
+
+	// Ensure the response is a bool
+	data, ok := res.(bool)
+	if !ok {
+		return false, errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
