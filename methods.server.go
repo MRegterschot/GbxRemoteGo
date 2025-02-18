@@ -329,3 +329,25 @@ func (client *GbxClient) GetSkinsDirectory() (string, error) {
 
 	return data, nil
 }
+
+// Disable player horns. Only available to Admin.
+func (client *GbxClient) DisableHorns(disable bool) error {
+	_, err := client.Call("DisableHorns", disable)
+	return err
+}
+
+// Returns whether the horns are disabled.
+func (client *GbxClient) AreHornsDisabled() (bool, error) {
+	res, err := client.Call("AreHornsDisabled")
+	if err != nil {
+		return false, err
+	}
+
+	// Ensure the response is a bool
+	data, ok := res.(bool)
+	if !ok {
+		return false, errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
