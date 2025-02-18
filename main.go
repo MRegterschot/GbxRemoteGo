@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+
+	// "github.com/MRegterschot/GbxRemoteGo/structs"
 )
 
 func main() {
@@ -39,17 +41,6 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
-	// if err := client.JumpToMapIndex(2); err != nil {
-	// 	fmt.Println(err)
-	// }
-
-	res, err := client.AddMapList([]string{"My Maps/Beryllium.Map.Gbx"})
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println(res)
 
 	select {}
 }
