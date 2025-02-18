@@ -38,3 +38,13 @@ const (
 	TMServerHidden
 	TMServerHiddenFromNations
 )
+
+type TMMaxPlayers struct {
+	CurrentValue int `json:"CurrentValue"`
+	NextValue    int `json:"NextValue"`
+}
+
+type TMMaxSpectators struct {
+	CurrentValue int `json:"CurrentValue"`
+	NextValue    int `json:"NextValue"`
+}

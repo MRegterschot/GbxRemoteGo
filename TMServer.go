@@ -215,3 +215,47 @@ func (client *GbxClient) GetServerPasswordForSpectator() (string, error) {
 
 	return data, nil
 }
+
+// Set a new maximum number of players. Only available to Admin. Requires a map restart to be taken into account.
+func (client *GbxClient) SetMaxPlayers(maxPlayers int) error {
+	_, err := client.Call("SetMaxPlayers", maxPlayers)
+	return err
+}
+
+// Get the current and next maximum number of players allowed on server. The struct returned contains two fields CurrentValue and NextValue.
+func (client *GbxClient) GetMaxPlayers() (structs.TMMaxPlayers, error) {
+	res, err := client.Call("GetMaxPlayers")
+	if err != nil {
+		return structs.TMMaxPlayers{}, err
+	}
+
+	var maxPlayers structs.TMMaxPlayers
+	err = convertToStruct(res, &maxPlayers)
+	if err != nil {
+		return structs.TMMaxPlayers{}, err
+	}
+
+	return maxPlayers, nil
+}
+
+// Set a new maximum number of Spectators. Only available to Admin. Requires a map restart to be taken into account.
+func (client *GbxClient) SetMaxSpectators(maxSpectators int) error {
+	_, err := client.Call("SetMaxSpectators", maxSpectators)
+	return err
+}
+
+// Get the current and next maximum number of spectators allowed on server. The struct returned contains two fields CurrentValue and NextValue.
+func (client *GbxClient) GetMaxSpectators() (structs.TMMaxSpectators, error) {
+	res, err := client.Call("GetMaxSpectators")
+	if err != nil {
+		return structs.TMMaxSpectators{}, err
+	}
+
+	var maxSpectators structs.TMMaxSpectators
+	err = convertToStruct(res, &maxSpectators)
+	if err != nil {
+		return structs.TMMaxSpectators{}, err
+	}
+
+	return maxSpectators, nil
+}
