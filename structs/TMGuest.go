@@ -1,5 +1,5 @@
 package structs
 
 type PlayerInfo struct {
-	Login string `xmlrpc:"Login"`
+	Login string `json:"Login" xmlrpc:"Login"`
 }

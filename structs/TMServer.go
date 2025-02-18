@@ -27,8 +27,8 @@ type TMVersion struct {
 }
 
 type TMServerTag struct {
-	Name  string `json:"Name"`
-	Value string `json:"Value"`
+	Name  string `json:"Name" xmlrpc:"Name"`
+	Value string `json:"Value" xmlrpc:"Value"`
 }
 
 type TMServerVisibility int
@@ -40,11 +40,11 @@ const (
 )
 
 type TMMaxPlayers struct {
-	CurrentValue int `json:"CurrentValue"`
-	NextValue    int `json:"NextValue"`
+	CurrentValue int `json:"CurrentValue" xmlrpc:"CurrentValue"`
+	NextValue    int `json:"NextValue" xmlrpc:"NextValue"`
 }
 
 type TMMaxSpectators struct {
-	CurrentValue int `json:"CurrentValue"`
-	NextValue    int `json:"NextValue"`
+	CurrentValue int `json:"CurrentValue" xmlrpc:"CurrentValue"`
+	NextValue    int `json:"NextValue" xmlrpc:"NextValue"`
 }
