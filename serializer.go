@@ -10,6 +10,8 @@ import (
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/MRegterschot/GbxRemoteGo/structs"
 )
 
 type MethodCall struct {
@@ -163,7 +165,7 @@ func serializeParam(param interface{}) (string, error) {
 	switch v := param.(type) {
 	case string:
 		return fmt.Sprintf("<value><string>%s</string></value>", v), nil
-	case int, int32, int64:
+	case int, int32, int64, structs.TMServerVisibility:
 		return fmt.Sprintf("<value><int>%d</int></value>", v), nil
 	case float32, float64:
 		return fmt.Sprintf("<value><double>%f</double></value>", v), nil

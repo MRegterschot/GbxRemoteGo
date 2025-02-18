@@ -30,3 +30,11 @@ type TMServerTag struct {
 	Name  string `json:"Name"`
 	Value string `json:"Value"`
 }
+
+type TMServerVisibility int
+
+const (
+	TMServerVisible TMServerVisibility = iota
+	TMServerHidden
+	TMServerHiddenFromNations
+)

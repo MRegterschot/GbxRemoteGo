@@ -149,3 +149,25 @@ func (client *GbxClient) GetServerComment() (string, error) {
 
 	return data, nil
 }
+
+// Set whether the server should be hidden from the public server list (0 = visible, 1 = always hidden, 2 = hidden from nations). Only available to Admin.
+func (client *GbxClient) SetHideServer(visibility structs.TMServerVisibility) error {
+	_, err := client.Call("SetHideServer", visibility)
+	return err
+}
+
+// Get whether the server wants to be hidden from the public server list.
+func (client *GbxClient) GetHideServer() (structs.TMServerVisibility, error) {
+	res, err := client.Call("GetHideServer")
+	if err != nil {
+		return structs.TMServerVisibility(0), err
+	}
+
+	// Ensure the response is an int
+	data, ok := res.(int)
+	if !ok {
+		return structs.TMServerVisibility(0), errors.New("unexpected response format")
+	}
+
+	return structs.TMServerVisibility(data), nil
+}
