@@ -1,6 +1,10 @@
 package main
 
-import "github.com/MRegterschot/GbxRemoteGo/structs"
+import (
+	"errors"
+
+	"github.com/MRegterschot/GbxRemoteGo/structs"
+)
 
 // Get some system infos, including connection rates (in kbps).
 func (client *GbxClient) GetSystemInfo() (structs.TMSystemInfo, error) {
@@ -60,4 +64,66 @@ func (client *GbxClient) GetVersion() (structs.TMVersion, error) {
 func (client *GbxClient) Echo(par1 string, par2 string) error {
 	_, err := client.Call("Echo", par1, par2)
 	return err
+}
+
+// Set the download and upload rates (in kbps).
+func (client *GbxClient) SetConnectionRates(download int, upload int) error {
+	_, err := client.Call("SetConnectionRates", download, upload)
+	return err
+}
+
+// Returns the list of tags and associated values set on this server. Only available to Admin.
+func (client *GbxClient) GetServerTags() ([]structs.TMServerTag, error) {
+	res, err := client.Call("GetServerTags")
+	if err != nil {
+		return nil, err
+	}
+
+	var serverTags []structs.TMServerTag
+	err = convertToStruct(res, &serverTags)
+	if err != nil {
+		return nil, err
+	}
+
+	return serverTags, nil
+}
+
+// Set a tag and its value on the server. This method takes two parameters. The first parameter specifies the name of the tag, and the second one its value. The list is an array of structures {string Name, string Value}. Only available to Admin.
+func (client *GbxClient) SetServerTag(tag string, value string) error {
+	_, err := client.Call("SetServerTag", tag, value)
+	return err
+}
+
+// Unset the tag with the specified name on the server. Only available to Admin.
+func (client *GbxClient) UnsetServerTag(tag string) error {
+	_, err := client.Call("UnsetServerTag", tag)
+	return err
+}
+
+// Reset all tags on the server. Only available to Admin.
+func (client *GbxClient) ResetServerTags() error {
+	_, err := client.Call("ResetServerTags")
+	return err
+}
+
+// Set a new server name in utf8 format. Only available to Admin.
+func (client *GbxClient) SetServerName(name string) error {
+	_, err := client.Call("SetServerName", name)
+	return err
+}
+
+// Get the server name in utf8 format.
+func (client *GbxClient) GetServerName() (string, error) {
+	res, err := client.Call("GetServerName")
+	if err != nil {
+		return "", err
+	}
+
+	// Ensure the response is a string
+	data, ok := res.(string)
+	if !ok {
+		return "", errors.New("unexpected response format")
+	}
+
+	return data, nil
 }

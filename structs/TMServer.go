@@ -25,3 +25,8 @@ type TMVersion struct {
 	Build      string `json:"Build"`
 	ApiVersion string `json:"ApiVersion"`
 }
+
+type TMServerTag struct {
+	Name  string `json:"Name"`
+	Value string `json:"Value"`
+}
