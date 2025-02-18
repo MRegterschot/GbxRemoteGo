@@ -473,3 +473,19 @@ func (client *GbxClient) StopServer() error {
 	_, err := client.Call("StopServer")
 	return err
 }
+
+// Returns a struct containing the networks stats of the server. The structure contains the following fields : Uptime, NbrConnection, MeanConnectionTime, MeanNbrPlayer, RecvNetRate, SendNetRate, TotalReceivingSize, TotalSendingSize and an array of structures named PlayerNetInfos. Each structure of the array PlayerNetInfos contains the following fields : Login, IPAddress, LastTransferTime, DeltaBetweenTwoLastNetState, PacketLossRate. Only available to SuperAdmin.
+func (client *GbxClient) GetNetworkStats() (structs.TMNetworkStats, error) {
+	res, err := client.Call("GetNetworkStats")
+	if err != nil {
+		return structs.TMNetworkStats{}, err
+	}
+
+	var networkStats structs.TMNetworkStats
+	err = convertToStruct(res, &networkStats)
+	if err != nil {
+		return structs.TMNetworkStats{}, err
+	}
+
+	return networkStats, nil
+}

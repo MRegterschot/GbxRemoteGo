@@ -93,3 +93,25 @@ type TMServerOptionsRequest struct {
 	DelayedVisuals_ServerToClient_SendingRate  *int  `json:"DelayedVisuals_ServerToClient_SendingRate,omitempty" xmlrpc:"DelayedVisuals_ServerToClient_SendingRate"`   // Optional
 	DelayedVisuals_RestrictToSpectators        *bool `json:"DelayedVisuals_RestrictToSpectators,omitempty" xmlrpc:"DelayedVisuals_RestrictToSpectators"`               // Optional
 }
+
+// Deprecated
+type TMNetworkStats struct {
+	Uptime             int               `json:"Uptime" xmlrpc:"Uptime"`
+	NbrConnection      int               `json:"NbrConnection" xmlrpc:"NbrConnection"`
+	MeanConnectionTime int               `json:"MeanConnectionTime" xmlrpc:"MeanConnectionTime"`
+	MeanNbrPlayer      int               `json:"MeanNbrPlayer" xmlrpc:"MeanNbrPlayer"`
+	RecvNetRate        int               `json:"RecvNetRate" xmlrpc:"RecvNetRate"`
+	SendNetRate        int               `json:"SendNetRate" xmlrpc:"SendNetRate"`
+	TotalReceivingSize int               `json:"TotalReceivingSize" xmlrpc:"TotalReceivingSize"`
+	TotalSendingSize   int               `json:"TotalSendingSize" xmlrpc:"TotalSendingSize"`
+	PlayerNetInfos     []TMPlayerNetInfo `json:"PlayerNetInfos" xmlrpc:"PlayerNetInfos"`
+}
+
+type TMPlayerNetInfo struct {
+	Login                 string  `json:"Login" xmlrpc:"Login"`
+	IPAddress             string  `json:"IPAddress" xmlrpc:"IPAddress"`
+	StateUpdateLatency    int     `json:"StateUpdateLatency" xmlrpc:"StateUpdateLatency"`
+	StateUpdatePeriod     int     `json:"StateUpdatePeriod" xmlrpc:"StateUpdatePeriod"`
+	LatestNetworkActivity int     `json:"LatestNetworkActivity" xmlrpc:"LatestNetworkActivity"`
+	PacketLossRate        float32 `json:"PacketLossRate" xmlrpc:"PacketLossRate"`
+}
