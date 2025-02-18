@@ -211,7 +211,7 @@ func serializeParam(param interface{}) (string, error) {
 	case CData: // Handle CDATA serialization
 		return fmt.Sprintf("<value><string><![CDATA[%s]]></string></value>", v), nil
 	case nil: // Handle nil serialization
-		return "<nil/>", nil
+		return "<value><nil/></value>", nil
 	default:
 		// Handle custom structs using reflection
 		val := reflect.ValueOf(param)
