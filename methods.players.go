@@ -27,16 +27,16 @@ func (client *GbxClient) UnBan(login string) error {
 }
 
 // Returns the list of banned players. This method takes two parameters. The first parameter specifies the maximum number of infos to be returned, and the second one the starting index in the list. The list is an array of structures. Each structure contains the following fields : Login, ClientName and IPAddress.
-func (client *GbxClient) GetBanList(max int, start int) ([]structs.TMBanList, error) {
+func (client *GbxClient) GetBanList(max int, start int) ([]structs.TMBanListEntry, error) {
 	res, err := client.Call("GetBanList", max, start)
 	if err != nil {
-		return []structs.TMBanList{}, err
+		return []structs.TMBanListEntry{}, err
 	}
 
-	var banList []structs.TMBanList
+	var banList []structs.TMBanListEntry
 	err = convertToStruct(res, &banList)
 	if err != nil {
-		return []structs.TMBanList{}, err
+		return []structs.TMBanListEntry{}, err
 	}
 
 	return banList, nil
@@ -60,23 +60,23 @@ func (client *GbxClient) BlackListId(id int) error {
 	return err
 }
 
-// UnTMBlackList the player with the specified login. Only available to SuperAdmin.
+// UnTMBlackListEntry the player with the specified login. Only available to SuperAdmin.
 func (client *GbxClient) UnBlackList(login string) error {
 	_, err := client.Call("UnBlackList", login)
 	return err
 }
 
 // Returns the list of blacklisted players. This method takes two parameters. The first parameter specifies the maximum number of infos to be returned, and the second one the starting index in the list. The list is an array of structures. Each structure contains the following fields : Login.
-func (client *GbxClient) GetBlackList(max int, start int) ([]structs.TMBlackList, error) {
+func (client *GbxClient) GetBlackList(max int, start int) ([]structs.TMBlackListEntry, error) {
 	res, err := client.Call("GetBlackList", max, start)
 	if err != nil {
-		return []structs.TMBlackList{}, err
+		return []structs.TMBlackListEntry{}, err
 	}
 
-	var blackList []structs.TMBlackList
+	var blackList []structs.TMBlackListEntry
 	err = convertToStruct(res, &blackList)
 	if err != nil {
-		return []structs.TMBlackList{}, err
+		return []structs.TMBlackListEntry{}, err
 	}
 
 	return blackList, nil
@@ -131,16 +131,16 @@ func (client *GbxClient) RemoveGuest(login string) error {
 }
 
 // Returns the list of players on the guest list. This method takes two parameters. The first parameter specifies the maximum number of infos to be returned, and the second one the starting index in the list. The list is an array of structures. Each structure contains the following fields : Login.
-func (client *GbxClient) GetGuestList(max int, start int) ([]structs.TMPlayerInfo, error) {
+func (client *GbxClient) GetGuestList(max int, start int) ([]structs.TMGuestListEntry, error) {
 	res, err := client.Call("GetGuestList", max, start)
 	if err != nil {
-		return []structs.TMPlayerInfo{}, err
+		return []structs.TMGuestListEntry{}, err
 	}
 
-	var guestList []structs.TMPlayerInfo
+	var guestList []structs.TMGuestListEntry
 	err = convertToStruct(res, &guestList)
 	if err != nil {
-		return []structs.TMPlayerInfo{}, err
+		return []structs.TMGuestListEntry{}, err
 	}
 
 	return guestList, nil
@@ -180,4 +180,66 @@ func (client *GbxClient) Kick(login string, reason string) error {
 func (client *GbxClient) KickId(id int, reason string) error {
 	_, err := client.Call("KickId", id, reason)
 	return err
+}
+
+// Returns the list of players on the server. This method take two parameters. The first parameter specifies the maximum number of infos to be returned, and the second one the starting index in the list, an optional 3rd parameter is used for compatibility: struct version (0 = united, 1 = forever, 2 = forever, including the servers). The list is an array of PlayerInfo structures. Forever PlayerInfo struct is: Login, NickName, PlayerId, TeamId, SpectatorStatus, LadderRanking, and Flags.
+// LadderRanking is 0 when not in official mode,
+// Flags = ForceSpectator(0,1,2) + StereoDisplayMode * 1000 + IsManagedByAnOtherServer * 10000 + IsServer * 100000 + HasPlayerSlot * 1000000 + IsBroadcasting * 10000000 + HasJoinedGame * 100000000
+// SpectatorStatus = Spectator + TemporarySpectator * 10 + PureSpectator * 100 + AutoTarget * 1000 + CurrentTargetId * 10000
+func (client *GbxClient) GetPlayerList(max int, start int, version ...int) ([]structs.TMPlayerInfo, error) {
+	var param int = -1
+	if len(version) > 0 {
+		param = version[0]
+	}
+	res, err := client.Call("GetPlayerList", max, start, param)
+	if err != nil {
+		return []structs.TMPlayerInfo{}, err
+	}
+
+	var playerList []structs.TMPlayerInfo
+	err = convertToStruct(res, &playerList)
+	if err != nil {
+		return []structs.TMPlayerInfo{}, err
+	}
+
+	return playerList, nil
+}
+
+// Returns a struct containing the infos on the player with the specified login, with an optional parameter for compatibility: struct version (0 = united, 1 = forever). The structure is identical to the ones from GetPlayerList. Forever PlayerInfo struct is: Login, NickName, PlayerId, TeamId, SpectatorStatus, LadderRanking, and Flags.
+// LadderRanking is 0 when not in official mode,
+// Flags = ForceSpectator(0,1,2) + StereoDisplayMode * 1000 + IsManagedByAnOtherServer * 10000 + IsServer * 100000 + HasPlayerSlot * 1000000 + IsBroadcasting * 10000000 + HasJoinedGame * 100000000
+// SpectatorStatus = Spectator + TemporarySpectator * 10 + PureSpectator * 100 + AutoTarget * 1000 + CurrentTargetId * 10000
+func (client *GbxClient) GetPlayerInfo(login string, version ...int) (structs.TMPlayerInfo, error) {
+	var param int = -1
+	if len(version) > 0 {
+		param = version[0]
+	}
+	res, err := client.Call("GetPlayerInfo", login, param)
+	if err != nil {
+		return structs.TMPlayerInfo{}, err
+	}
+
+	var playerInfo structs.TMPlayerInfo
+	err = convertToStruct(res, &playerInfo)
+	if err != nil {
+		return structs.TMPlayerInfo{}, err
+	}
+
+	return playerInfo, nil
+}
+
+// Returns a struct containing the infos on the player with the specified login. The structure contains the following fields : Login, NickName, PlayerId, TeamId, IPAddress, DownloadRate, UploadRate, Language, IsSpectator, IsInOfficialMode, a structure named Avatar, an array of structures named Skins, a structure named LadderStats, HoursSinceZoneInscription and OnlineRights (0: nations account, 3: united account). Each structure of the array Skins contains two fields Environnement and a struct PackDesc. Each structure PackDesc, as well as the struct Avatar, contains two fields FileName and Checksum.
+func (client *GbxClient) GetDetailedPlayerInfo(login string) (structs.TMPlayerDetailedInfo, error) {
+	res, err := client.Call("GetDetailedPlayerInfo", login)
+	if err != nil {
+		return structs.TMPlayerDetailedInfo{}, err
+	}
+
+	var playerInfo structs.TMPlayerDetailedInfo
+	err = convertToStruct(res, &playerInfo)
+	if err != nil {
+		return structs.TMPlayerDetailedInfo{}, err
+	}
+
+	return playerInfo, nil
 }
