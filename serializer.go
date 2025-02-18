@@ -190,7 +190,7 @@ func serializeParam(param interface{}) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			values += fmt.Sprintf("<value>%s</value>", serializedElem)
+			values += fmt.Sprintf("%s", serializedElem)
 		}
 		return fmt.Sprintf("<value><array><data>%s</data></array></value>", values), nil
 	case []byte: // Handle base64 encoding
@@ -205,7 +205,7 @@ func serializeParam(param interface{}) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			members += fmt.Sprintf("<member><name>%s</name><value>%s</value></member>", name, serializedValue)
+			members += fmt.Sprintf("<member><name>%s</name>%s</member>", name, serializedValue)
 		}
 		return fmt.Sprintf("<value><struct>%s</struct></value>", members), nil
 	case CData: // Handle CDATA serialization
