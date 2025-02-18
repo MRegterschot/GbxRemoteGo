@@ -5,3 +5,11 @@ type TMBanList struct {
 	ClientName string `json:"ClientName" xmlrpc:"ClientName"`
 	IPAddress  string `json:"IPAddress" xmlrpc:"IPAddress"`
 }
+
+type TMBlackList struct {
+	Login string `json:"Login" xmlrpc:"Login"`
+}
+
+type TMPlayerInfo struct {
+	Login string `json:"Login" xmlrpc:"Login"`
+}
