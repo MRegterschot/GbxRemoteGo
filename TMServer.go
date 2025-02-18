@@ -281,3 +281,51 @@ func (client *GbxClient) IsKeepingPlayerSlots() (bool, error) {
 
 	return data, nil
 }
+
+// Returns the path of the game datas directory. Only available to Admin.
+func (client *GbxClient) GameDataDirectory() (string, error) {
+	res, err := client.Call("GameDataDirectory")
+	if err != nil {
+		return "", err
+	}
+
+	// Ensure the response is a string
+	data, ok := res.(string)
+	if !ok {
+		return "", errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
+
+// Returns the path of the maps directory. Only available to Admin.
+func (client *GbxClient) GetMapsDirectory() (string, error) {
+	res, err := client.Call("GetMapsDirectory")
+	if err != nil {
+		return "", err
+	}
+
+	// Ensure the response is a string
+	data, ok := res.(string)
+	if !ok {
+		return "", errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
+
+// Returns the path of the skins directory. Only available to Admin.
+func (client *GbxClient) GetSkinsDirectory() (string, error) {
+	res, err := client.Call("GetSkinsDirectory")
+	if err != nil {
+		return "", err
+	}
+
+	// Ensure the response is a string
+	data, ok := res.(string)
+	if !ok {
+		return "", errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
