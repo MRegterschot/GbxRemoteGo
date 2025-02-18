@@ -243,3 +243,26 @@ func (client *GbxClient) GetDetailedPlayerInfo(login string) (structs.TMPlayerDe
 
 	return playerInfo, nil
 }
+
+// Returns a struct containing the player infos of the game server (ie: in case of a basic server, itself; in case of a relay server, the main server), with an optional parameter for compatibility: struct version (0 = united, 1 = forever). The structure is identical to the ones from GetPlayerList. Forever PlayerInfo struct is: Login, NickName, PlayerId, TeamId, SpectatorStatus, LadderRanking, and Flags.
+// LadderRanking is 0 when not in official mode,
+// Flags = ForceSpectator(0,1,2) + StereoDisplayMode * 1000 + IsManagedByAnOtherServer * 10000 + IsServer * 100000 + HasPlayerSlot * 1000000 + IsBroadcasting * 10000000 + HasJoinedGame * 100000000
+// SpectatorStatus = Spectator + TemporarySpectator * 10 + PureSpectator * 100 + AutoTarget * 1000 + CurrentTargetId * 10000
+func (client *GbxClient) GetMainServerPlayerInfo(version ...int) (structs.TMPlayerInfo, error) {
+	var param int = -1
+	if len(version) > 0 {
+		param = version[0]
+	}
+	res, err := client.Call("GetMainServerPlayerInfo", param)
+	if err != nil {
+		return structs.TMPlayerInfo{}, err
+	}
+
+	var playerInfo structs.TMPlayerInfo
+	err = convertToStruct(res, &playerInfo)
+	if err != nil {
+		return structs.TMPlayerInfo{}, err
+	}
+
+	return playerInfo, nil
+}
