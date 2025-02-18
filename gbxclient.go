@@ -59,7 +59,7 @@ func (client *GbxClient) listen() {
 			fmt.Println("Read error:", err)
 			return
 		}
-		// fmt.Println("Received data:", string(buffer[:n]))
+		fmt.Println("Received data:", string(buffer[:n]))
 		client.handleData(buffer[:n]) // Pass only received data
 	}
 }
@@ -68,74 +68,76 @@ func (g *GbxClient) handleData(data []byte) {
 	g.Mutex.Lock()
 	defer g.Mutex.Unlock()
 
+	// Write the incoming data to RecvData buffer
 	g.RecvData.Write(data)
+	for g.RecvData.Len() > 4 {
+		// Check if the ResponseLength is not yet set and if we have enough data to read it
+		if g.ResponseLength == nil && g.RecvData.Len() >= 4 {
+			lengthBytes := g.RecvData.Next(4) // Read the first 4 bytes
+			length := binary.LittleEndian.Uint32(lengthBytes)
 
-	if g.RecvData.Len() > 0 && g.ResponseLength == nil {
-		if g.RecvData.Len() < 4 {
-			return // Not enough data to read the length
+			// If connected, adjust the length by 4
+			if g.IsConnected {
+				length += 4
+			}
+
+			// Set the ResponseLength
+			g.ResponseLength = &length
 		}
 
-		lengthBytes := g.RecvData.Next(4)
-		length := binary.LittleEndian.Uint32(lengthBytes)
-		if g.IsConnected {
-			length += 4
-		}
-		g.ResponseLength = &length
-	}
+		// Process the data if we have enough data for a full response
+		if g.ResponseLength != nil && uint32(g.RecvData.Len()) >= *g.ResponseLength {
+			// Extract the exact amount of data based on the response length
+			dataToProcess := g.RecvData.Next(int(*g.ResponseLength))
 
-	if g.ResponseLength != nil && uint32(g.RecvData.Len()) >= *g.ResponseLength {
-		data := g.RecvData.Next(int(*g.ResponseLength))
-
-		if !g.IsConnected {
-			if string(data) == "GBXRemote 2" {
-				g.IsConnected = true
-				// Resolve connection success
-				if ch, ok := g.PromiseCallbacks[0]; ok {
-					ch <- PromiseResult{Result: true, Error: nil}
-					delete(g.PromiseCallbacks, 0)
+			// Handle the connection and disconnection logic
+			if !g.IsConnected {
+				// Check if we received the connection response
+				if string(dataToProcess) == "GBXRemote 2" {
+					g.IsConnected = true
+					// Resolve connection success
+					if ch, ok := g.PromiseCallbacks[0]; ok {
+						ch <- PromiseResult{Result: true, Error: nil}
+						delete(g.PromiseCallbacks, 0)
+					}
+				} else {
+					// Connection failed, close socket and reject promise
+					g.Socket.Close()
+					g.IsConnected = false
+					g.Socket = nil
+					if ch, ok := g.PromiseCallbacks[0]; ok {
+						ch <- PromiseResult{Result: false, Error: errors.New("connection failed")}
+						delete(g.PromiseCallbacks, 0)
+					}
+					g.Events.emit("disconnect", "Connection failed")
 				}
 			} else {
-				g.Socket.Close()
-				g.IsConnected = false
-				g.Socket = nil
-				// Reject connection
-				if ch, ok := g.PromiseCallbacks[0]; ok {
-					ch <- PromiseResult{Result: false, Error: errors.New("connection failed")}
-					delete(g.PromiseCallbacks, 0)
+				// If connected, process method response or method call
+				requestHandle := binary.LittleEndian.Uint32(dataToProcess[:4])
+
+				if requestHandle >= 0x80000000 {
+					// Handle method response
+					res, err := DeserializeMethodResponse(dataToProcess[4:])
+					if ch, ok := g.PromiseCallbacks[requestHandle]; ok {
+						ch <- PromiseResult{Result: res, Error: err}
+						delete(g.PromiseCallbacks, requestHandle)
+					}
+				} else {
+					// Handle method call
+					method, res, err := DeserializeMethodCall(dataToProcess[4:])
+					if err != nil {
+						fmt.Println("Error:", err)
+					} else {
+						// Emit callback event
+						g.Events.emit("callback", Callback{Method: method, Res: res})
+					}
 				}
 			}
-		} else {
-			deserializer := &Deserializer{}
-			requestHandle := binary.LittleEndian.Uint32(data[:4])
-			readable := bytes.NewReader(data[4:])
 
-			if requestHandle >= 0x80000000 {
-				// Handle method response
-				res, err := deserializer.DeserializeMethodResponse(readable)
-				if ch, ok := g.PromiseCallbacks[requestHandle]; ok {
-					ch <- PromiseResult{Result: res, Error: err}
-					delete(g.PromiseCallbacks, requestHandle)
-				} else {
-					return
-				}
-			} else {
-				// Handle method call
-				method, res, err := deserializer.DeserializeMethodCall(readable)
-				if err != nil {
-					fmt.Println("Error:", err)
-				} else {
-					g.Events.emit("callback", Callback{Method: method, Res: res})
-				}
-			}
+			// Reset the response length after processing
+			g.ResponseLength = nil
 		}
-
-		g.ResponseLength = nil
-		if g.RecvData.Len() > 0 {
-			g.handleData(nil) // Recursively handle remaining data
-		}
-		return
 	}
-	return
 }
 
 func (client *GbxClient) sendRequest(xmlString string, wait bool) PromiseResult {

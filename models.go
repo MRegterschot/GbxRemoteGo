@@ -41,6 +41,3 @@ type Callback struct {
 	Method string
 	Res    interface{}
 }
-
-// Deserializer placeholder (you need to implement the actual logic)
-type Deserializer struct{}

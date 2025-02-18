@@ -1,13 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"io"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -35,8 +36,8 @@ type Value struct {
 	Int      *int     `xml:"i4"`
 	Bool     *bool    `xml:"boolean"`
 	Float    *float64 `xml:"double"`
-	Struct   *Struct `xml:"struct"`
-	Array    *Array  `xml:"array"`
+	Struct   *Struct  `xml:"struct"`
+	Array    *Array   `xml:"array"`
 	Base64   *string  `xml:"base64"`
 	DateTime *string  `xml:"dateTime.iso8601"`
 }
@@ -66,7 +67,13 @@ type XMLRequest struct {
 	Params     []XMLParam `xml:"params>param"`
 }
 
-func (d *Deserializer) DeserializeMethodResponse(r io.Reader) (interface{}, error) {
+func DeserializeMethodResponse(data []byte) (interface{}, error) {
+	sanitizedData := sanitizeXML(string(data))
+	if err := checkResponse([]byte(sanitizedData)); err != nil {
+		return nil, err
+	}
+	r := bytes.NewReader([]byte(sanitizedData))
+
 	var methodResponse MethodResponse
 	decoder := xml.NewDecoder(r)
 
@@ -90,10 +97,16 @@ func (d *Deserializer) DeserializeMethodResponse(r io.Reader) (interface{}, erro
 	}
 
 	param := methodResponse.Params[0]
-	return d.deserializeValue(param.Value)
+	return deserializeValue(param.Value)
 }
 
-func (d *Deserializer) DeserializeMethodCall(r io.Reader) (string, interface{}, error) {
+func DeserializeMethodCall(data []byte) (string, interface{}, error) {
+	sanitizedData := sanitizeXML(string(data))
+	if err := checkResponse([]byte(sanitizedData)); err != nil {
+		return "", nil, err
+	}
+	r := bytes.NewReader([]byte(sanitizedData))
+
 	var methodCall MethodCall
 	decoder := xml.NewDecoder(r)
 
@@ -111,7 +124,7 @@ func (d *Deserializer) DeserializeMethodCall(r io.Reader) (string, interface{}, 
 	// Parse the parameters
 	params := make([]interface{}, len(methodCall.Params))
 	for i, param := range methodCall.Params {
-		value, err := d.deserializeValue(param.Value)
+		value, err := deserializeValue(param.Value)
 		if err != nil {
 			return "", nil, err
 		}
@@ -195,7 +208,7 @@ func serializeParam(param interface{}) (string, error) {
 }
 
 // Recursive function to handle deserialization of a single value
-func (d *Deserializer) deserializeValue(value Value) (interface{}, error) {
+func deserializeValue(value Value) (interface{}, error) {
 	switch {
 	case value.String != nil:
 		return *value.String, nil
@@ -209,7 +222,7 @@ func (d *Deserializer) deserializeValue(value Value) (interface{}, error) {
 		// Handle structs by converting to a map
 		parsedData := make(map[string]interface{})
 		for _, member := range value.Struct.Members {
-			memberValue, err := d.deserializeValue(member.Value) // Recursively deserialize each member's value
+			memberValue, err := deserializeValue(member.Value) // Recursively deserialize each member's value
 			if err != nil {
 				return nil, err
 			}
@@ -220,7 +233,7 @@ func (d *Deserializer) deserializeValue(value Value) (interface{}, error) {
 		// Handle arrays, process each element in the array
 		parsedArray := make([]interface{}, len(value.Array.Data))
 		for i, item := range value.Array.Data {
-			itemValue, err := d.deserializeValue(item) // Recursively deserialize array items
+			itemValue, err := deserializeValue(item) // Recursively deserialize array items
 			if err != nil {
 				return nil, err
 			}
@@ -238,29 +251,67 @@ func (d *Deserializer) deserializeValue(value Value) (interface{}, error) {
 
 // Generic function to convert response to a specific type
 func convertToStruct(res interface{}, targetType interface{}) error {
-	// Ensure the response is a map[string]interface{}
-	data, ok := res.(map[string]interface{})
-	if !ok {
+	// Ensure the response is either map[string]interface{} or []interface{}
+	switch v := res.(type) {
+	case map[string]interface{}:
+		// Convert map to JSON
+		jsonData, err := json.Marshal(v)
+		if err != nil {
+			return err
+		}
+
+		// Ensure targetType is a pointer
+		targetVal := reflect.ValueOf(targetType)
+		if targetVal.Kind() != reflect.Ptr || targetVal.IsNil() {
+			return errors.New("target type must be a non-nil pointer")
+		}
+
+		// Unmarshal JSON into the target struct
+		err = json.Unmarshal(jsonData, targetType)
+		if err != nil {
+			return err
+		}
+
+	case []interface{}:
+		// Handle slice of interfaces
+		// Convert the slice to JSON
+		jsonData, err := json.Marshal(v)
+		if err != nil {
+			return err
+		}
+
+		// Ensure targetType is a pointer to a slice (e.g., *[]MyStruct)
+		targetVal := reflect.ValueOf(targetType)
+		if targetVal.Kind() != reflect.Ptr || targetVal.IsNil() {
+			return errors.New("target type must be a non-nil pointer")
+		}
+
+		// Unmarshal JSON into the target slice
+		err = json.Unmarshal(jsonData, targetType)
+		if err != nil {
+			return err
+		}
+
+	default:
 		return errors.New("unexpected response format")
 	}
 
-	// Convert map to JSON
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-
-	// Unmarshal JSON into the provided target type
-	targetVal := reflect.ValueOf(targetType)
-	if targetVal.Kind() != reflect.Ptr || targetVal.IsNil() {
-		return errors.New("target type must be a non-nil pointer")
-	}
-
-	// Unmarshal JSON into the target struct
-	err = json.Unmarshal(jsonData, targetType)
-	if err != nil {
-		return err
-	}
-
 	return nil
+}
+
+// Sanitize XML input by removing invalid characters
+func sanitizeXML(input string) string {
+	return strings.Map(func(r rune) rune {
+		if r >= 0x20 {
+			return r
+		}
+		return -1 // Remove invalid characters
+	}, input)
+}
+
+func checkResponse(data []byte) error {
+	if bytes.HasSuffix(data, []byte("</methodResponse>")) || bytes.HasSuffix(data, []byte("</methodCall>")) {
+		return nil
+	}
+	return errors.New("incomplete response received")
 }
