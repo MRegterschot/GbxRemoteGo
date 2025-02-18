@@ -429,3 +429,19 @@ func (client *GbxClient) SaveBestGhostsReplay(login string, filename string) err
 	_, err := client.Call("SaveBestGhostsReplay", login, filename)
 	return err
 }
+
+// Returns a replay containing the data needed to validate the current best time of the player. The parameter is the login of the player.
+func (client *GbxClient) GetValidationReplay(login string) (string, error) {
+	res, err := client.Call("GetValidationReplay", login)
+	if err != nil {
+		return "", err
+	}
+
+	// Ensure the response is a string
+	data, ok := res.(string)
+	if !ok {
+		return "", errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
