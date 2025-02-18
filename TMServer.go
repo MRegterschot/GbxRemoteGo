@@ -127,3 +127,25 @@ func (client *GbxClient) GetServerName() (string, error) {
 
 	return data, nil
 }
+
+// Set a new server comment in utf8 format. Only available to Admin.
+func (client *GbxClient) SetServerComment(comment string) error {
+	_, err := client.Call("SetServerComment", comment)
+	return err
+}
+
+// Get the server comment in utf8 format.
+func (client *GbxClient) GetServerComment() (string, error) {
+	res, err := client.Call("GetServerComment")
+	if err != nil {
+		return "", err
+	}
+
+	// Ensure the response is a string
+	data, ok := res.(string)
+	if !ok {
+		return "", errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
