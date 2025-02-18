@@ -1,8 +1,6 @@
 package main
 
-type BlackList struct {
-	Login string `json:"Login"`
-}
+import "github.com/MRegterschot/GbxRemoteGo/structs"
 
 // Blacklist the player with the specified login. Only available to SuperAdmin.
 func (client *GbxClient) BlackList(login string) error {
@@ -23,16 +21,16 @@ func (client *GbxClient) UnBlackList(login string) error {
 }
 
 // Returns the list of blacklisted players. This method takes two parameters. The first parameter specifies the maximum number of infos to be returned, and the second one the starting index in the list. The list is an array of structures. Each structure contains the following fields : Login.
-func (client *GbxClient) GetBlackList(max int, start int) ([]BlackList, error) {
+func (client *GbxClient) GetBlackList(max int, start int) ([]structs.BlackList, error) {
 	res, err := client.Call("GetBlackList", max, start)
 	if err != nil {
-		return []BlackList{}, err
+		return []structs.BlackList{}, err
 	}
 
-	var blackList []BlackList
+	var blackList []structs.BlackList
 	err = convertToStruct(res, &blackList)
 	if err != nil {
-		return []BlackList{}, err
+		return []structs.BlackList{}, err
 	}
 
 	return blackList, nil

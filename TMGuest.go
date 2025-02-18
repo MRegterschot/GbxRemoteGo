@@ -1,8 +1,6 @@
 package main
 
-type PlayerInfo struct {
-	Login string `xmlrpc:"Login"`
-}
+import "github.com/MRegterschot/GbxRemoteGo/structs"
 
 // Add the player with the specified login on the guest list. Only available to Admin.
 func (client *GbxClient) AddGuest(login string) error {
@@ -23,16 +21,16 @@ func (client *GbxClient) RemoveGuest(login string) error {
 }
 
 // Returns the list of players on the guest list. This method takes two parameters. The first parameter specifies the maximum number of infos to be returned, and the second one the starting index in the list. The list is an array of structures. Each structure contains the following fields : Login.
-func (client *GbxClient) GetGuestList(max int, start int) ([]PlayerInfo, error) {
+func (client *GbxClient) GetGuestList(max int, start int) ([]structs.PlayerInfo, error) {
 	res, err := client.Call("GetGuestList", max, start)
 	if err != nil {
-		return []PlayerInfo{}, err
+		return []structs.PlayerInfo{}, err
 	}
 
-	var guestList []PlayerInfo
+	var guestList []structs.PlayerInfo
 	err = convertToStruct(res, &guestList)
 	if err != nil {
-		return []PlayerInfo{}, err
+		return []structs.PlayerInfo{}, err
 	}
 
 	return guestList, nil

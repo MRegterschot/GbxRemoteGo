@@ -1,93 +1,86 @@
 package main
 
-type TMSystemInfo struct {
-	PublishedIp            string `json:"PublishedIp"`
-	Port                   int    `json:"Port"`
-	P2PPort                int    `json:"P2PPort"`
-	TitleId                string `json:"TitleId"`
-	ServerLogin            string `json:"ServerLogin"`
-	ServerPlayerId         int    `json:"ServerPlayerId"`
-	ConnectionDownloadRate int    `json:"ConnectionDownloadRate"`
-	ConnectionUploadRate   int    `json:"ConnectionUploadRate"`
-	IsServer               bool   `json:"IsServer"`
-	IsDedicated            bool   `json:"IsDedicated"`
-}
+import (
+	"errors"
 
-type TMStatus struct {
-	Code int    `json:"Code"`
-	Name string `json:"Name"`
-}
+	"github.com/MRegterschot/GbxRemoteGo/structs"
+)
 
-// Get some system infos, including connection rates (in kbps).
-func (client *GbxClient) GetSystemInfo() (TMSystemInfo, error) {
-	res, err := client.Call("GetSystemInfo")
+// Return an array of all available XML-RPC methods on this server.
+func (client *GbxClient) ListMethods() ([]string, error) {
+	res, err := client.Call("system.listMethods")
 	if err != nil {
-		return TMSystemInfo{}, err
+		return nil, err
 	}
 
-	var systemInfo TMSystemInfo
-	err = convertToStruct(res, &systemInfo)
-	if err != nil {
-		return TMSystemInfo{}, err
+	// Ensure the response is a slice
+	data, ok := res.([]interface{})
+	if !ok {
+		return nil, errors.New("unexpected response format")
 	}
 
-	return systemInfo, nil
-}
-
-// Define the wanted api.
-func (client *GbxClient) SetApiVersion(version string) error {
-	_, err := client.Call("SetApiVersion", version)
-	return err
-}
-
-// Quit the application. Only available to SuperAdmin.
-func (client *GbxClient) QuitGame() error {
-	_, err := client.Call("QuitGame")
-	return err
-}
-
-// Returns the current status of the server.
-func (client *GbxClient) GetStatus() (TMStatus, error) {
-	res, err := client.Call("GetStatus")
-	if err != nil {
-		return TMStatus{}, err
+	// Convert slice to []string
+	methods := make([]string, len(data))
+	for i, v := range data {
+		methods[i] = v.(string)
 	}
 
-	var status TMStatus
-	err = convertToStruct(res, &status)
-	if err != nil {
-		return TMStatus{}, err
-	}
-
-	return status, nil
+	return methods, nil
 }
 
-type TMVersion struct {
-	Name       string `json:"Name"`
-	TitleId    string `json:"TitleId"`
-	Version    string `json:"Version"`
-	Build      string `json:"Build"`
-	ApiVersion string `json:"ApiVersion"`
-}
-
-// Returns a struct with the Name, TitleId, Version, Build and ApiVersion of the application remotely controlled.
-func (client *GbxClient) GetVersion() (TMVersion, error) {
-	res, err := client.Call("GetVersion")
+// Given the name of a method, return a help string.
+func (client *GbxClient) MethodHelp(method string) (string, error) {
+	res, err := client.Call("system.methodHelp", method)
 	if err != nil {
-		return TMVersion{}, err
+		return "", err
 	}
 
-	var version TMVersion
-	err = convertToStruct(res, &version)
-	if err != nil {
-		return TMVersion{}, err
+	// Ensure the response is a string
+	data, ok := res.(string)
+	if !ok {
+		return "", errors.New("unexpected response format")
 	}
 
-	return version, nil
+	return data, nil
 }
 
-// Allow the GameServer to call you back.
-func (client *GbxClient) EnableCallbacks(enable bool) error {
-	_, err := client.Call("EnableCallbacks", enable)
-	return err
+// Given the name of a method, return an array of legal signatures. Each signature is an array of strings. The first item of each signature is the return type, and any others items are parameter types.
+func (client *GbxClient) MethodSignature(signature string) ([]structs.TMMethodSignature, error) {
+	res, err := client.Call("system.methodSignature", signature)
+	if err != nil {
+		return nil, err
+	}
+
+	// Ensure the response is a slice
+	data, ok := res.([]interface{})
+	if !ok {
+		return nil, errors.New("unexpected response format")
+	}
+
+	// Convert slice to []TMMethodSignature
+	methods := make([]structs.TMMethodSignature, len(data))
+	for i, v := range data {
+		method := structs.TMMethodSignature{}
+		if v == nil {
+			method.ReturnType = ""
+			method.ParamTypes = nil
+		} else {
+			signature := v.([]interface{})
+			method.ReturnType = signature[0].(string)
+
+			if len(signature) > 1 {
+				paramTypes := make([]string, len(signature)-1)
+				for j := 1; j < len(signature); j++ {
+					paramTypes[j-1] = signature[j].(string)
+				}
+				method.ParamTypes = paramTypes
+			} else {
+				method.ParamTypes = nil
+			}
+		}
+
+		methods[i] = method
+	}
+
+	return methods, nil
 }

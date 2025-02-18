@@ -1,10 +1,6 @@
 package main
 
-type TMCurrentCallVote struct {
-	CallerLogin string `json:"CallerLogin"`
-	CmdName     string `json:"CmdName"`
-	CmdParam    string `json:"CmdParam"`
-}
+import "github.com/MRegterschot/GbxRemoteGo/structs"
 
 // Call a vote for a cmd. The command is a XML string corresponding to an XmlRpc request. Only available to Admin.
 func (client *GbxClient) CallVote(vote string) error {
@@ -25,16 +21,16 @@ func (client *GbxClient) CancelVote() error {
 }
 
 // Returns the vote currently in progress. The returned structure is { CallerLogin, CmdName, CmdParam }.
-func (client *GbxClient) GetCurrentCallVote() (TMCurrentCallVote, error) {
+func (client *GbxClient) GetCurrentCallVote() (structs.TMCurrentCallVote, error) {
 	res, err := client.Call("GetCurrentCallVote")
 	if err != nil {
-		return TMCurrentCallVote{}, err
+		return structs.TMCurrentCallVote{}, err
 	}
 
-	var currentCallVote TMCurrentCallVote
+	var currentCallVote structs.TMCurrentCallVote
 	err = convertToStruct(res, &currentCallVote)
 	if err != nil {
-		return TMCurrentCallVote{}, err
+		return structs.TMCurrentCallVote{}, err
 	}
 
 	return currentCallVote, nil
