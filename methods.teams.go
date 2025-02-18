@@ -85,3 +85,30 @@ func (client *GbxClient) GetForcedTeams() (bool, error) {
 
 	return data, nil
 }
+
+// Returns the current winning team for the race in progress. (-1: if not in team mode, or draw match)
+func (client *GbxClient) GetCurrentWinnerTeam() (int, error) {
+	res, err := client.Call("GetCurrentWinnerTeam")
+	if err != nil {
+		return 0, err
+	}
+
+	data, ok := res.(int)
+	if !ok {
+		return 0, errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
+
+// Force the team of the player. Only available in team mode. You have to pass the login and the team number (0 or 1). Only available to Admin.
+func (client *GbxClient) ForcePlayerTeam(login string, team int) error {
+	_, err := client.Call("ForcePlayerTeam", login, team)
+	return err
+}
+
+// Force the team of the player. Only available in team mode. You have to pass the playerid and the team number (0 or 1). Only available to Admin.
+func (client *GbxClient) ForcePlayerTeamId(playerID int, team int) error {
+	_, err := client.Call("ForcePlayerTeamId", playerID, team)
+	return err
+}
