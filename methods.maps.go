@@ -201,3 +201,24 @@ func (client *GbxClient) InsertMapList(filenames []string) (int, error) {
 
 	return data, nil
 }
+
+// Set as next map the one with the specified filename, if it is present in the selection. Only available to Admin.
+func (client *GbxClient) ChooseNextMap(filename string) error {
+	_, err := client.Call("ChooseNextMap", filename)
+	return err
+}
+
+// Set as next maps the list of maps with the specified filenames, if they are present in the selection. The list of maps to choose is an array of strings. Only available to Admin.
+func (client *GbxClient) ChooseNextMapList(filenames []string) (int, error) {
+	res, err := client.Call("ChooseNextMapList", filenames)
+	if err != nil {
+		return 0, err
+	}
+
+	data, ok := res.(int)
+	if !ok {
+		return 0, errors.New("unexpected response format")
+	}
+
+	return data, nil
+}
