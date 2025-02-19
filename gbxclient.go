@@ -60,10 +60,8 @@ func (client *GbxClient) listen() {
 				client.IsConnected = false
 				return
 			}
-			fmt.Println("Read error:", err)
 			return
 		}
-		// fmt.Println("Received data:", string(buffer[:n]))
 		client.handleData(buffer[:n]) // Pass only received data
 	}
 }
@@ -133,7 +131,7 @@ func (g *GbxClient) handleData(data []byte) {
 						fmt.Println("Error:", err)
 					} else {
 						// Emit callback event
-						g.Events.emit("callback", CallbackEventArgs{Method: method, Parameters: parameters})
+						g.handleCallback(method, parameters)
 					}
 				}
 			}

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	// "github.com/MRegterschot/GbxRemoteGo/structs"
+	"github.com/MRegterschot/GbxRemoteGo/events"
 )
 
 func main() {
@@ -19,10 +19,6 @@ func main() {
 	onDisconnectChan := make(chan interface{})
 	client.Events.On("disconnect", onDisconnectChan)
 	go handleDisconnect(onDisconnectChan)
-
-	onCallbackChan := make(chan interface{})
-	client.Events.On("callback", onCallbackChan)
-	go handleCallback(onCallbackChan)
 
 	// Connect to the server
 	if err := client.Connect("127.0.0.1", 5000); err != nil {
@@ -41,6 +37,19 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
+	// Register gbx callback handlers
+	client.OnPlayerConnect = append(client.OnPlayerConnect, func(client *GbxClient, args events.PlayerConnectEventArgs) {
+		fmt.Println("Player connected:", args.Login)
+	})
+
+	client.OnPlayerCheckpoint = append(client.OnPlayerCheckpoint, func(client *GbxClient, args events.PlayerCheckpointEventArgs) {
+		fmt.Println("Player checkpoint:", args)
+	})
+
+	client.OnAnyCallback = append(client.OnAnyCallback, func(client *GbxClient, args CallbackEventArgs) {
+		fmt.Println("Any callback:", args)
+	})
 
 	select {}
 }
@@ -62,7 +71,6 @@ func handleConnect(eventChan chan interface{}) {
 	}
 }
 
-// handleDisconnect processes the disconnect message
 func handleDisconnect(eventChan chan interface{}) {
 	for {
 		select {
@@ -71,20 +79,6 @@ func handleDisconnect(eventChan chan interface{}) {
 				fmt.Println(msg)
 			} else {
 				fmt.Println("Invalid event type for disconnect.")
-			}
-		}
-	}
-}
-
-// handleCallback processes the callback event
-func handleCallback(eventChan chan interface{}) {
-	for {
-		select {
-		case event := <-eventChan:
-			if callback, ok := event.(CallbackEventArgs); ok {
-				fmt.Println("Callback received:", callback.Parameters)
-			} else {
-				fmt.Println("Invalid event type for callback.")
 			}
 		}
 	}
