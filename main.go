@@ -81,8 +81,8 @@ func handleCallback(eventChan chan interface{}) {
 	for {
 		select {
 		case event := <-eventChan:
-			if callback, ok := event.(Callback); ok {
-				fmt.Println("Callback received:", callback.Res)
+			if callback, ok := event.(CallbackEventArgs); ok {
+				fmt.Println("Callback received:", callback.Parameters)
 			} else {
 				fmt.Println("Invalid event type for callback.")
 			}

@@ -6,6 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
+
+	"github.com/MRegterschot/GbxRemoteGo/events"
+	"github.com/MRegterschot/GbxRemoteGo/structs"
 )
 
 func NewGbxClient(options Options) *GbxClient {
@@ -124,12 +128,12 @@ func (g *GbxClient) handleData(data []byte) {
 					}
 				} else {
 					// Handle method call
-					method, res, err := DeserializeMethodCall(dataToProcess[4:])
+					method, parameters, err := DeserializeMethodCall(dataToProcess[4:])
 					if err != nil {
 						fmt.Println("Error:", err)
 					} else {
 						// Emit callback event
-						g.Events.emit("callback", Callback{Method: method, Res: res})
+						g.Events.emit("callback", CallbackEventArgs{Method: method, Parameters: parameters})
 					}
 				}
 			}
@@ -189,4 +193,181 @@ func (client *GbxClient) sendRequest(xmlString string, wait bool) PromiseResult 
 	client.Mutex.Unlock()
 
 	return res
+}
+
+func (client *GbxClient) handleCallback(method string, parameters []interface{}) {
+	switch method {
+	case "ManiaPlanet.BeginMap":
+		var mapInfo structs.TMSMapInfo
+		if err := convertToStruct(parameters[0], &mapInfo); err != nil {
+			return
+		}
+		client.invokeEvents(client.OnBeginMap, events.MapEventArgs{
+			Map: mapInfo,
+		})
+	case "ManiaPlanet.BeginMatch":
+		client.invokeEventsNoArgs(client.OnBeginMatch)
+	case "ManiaPlanet.Echo":
+		client.invokeEvents(client.OnEcho, events.EchoEventArgs{
+			Internal: parameters[0].(string),
+			Public:   parameters[1].(string),
+		})
+	case "ManiaPlanet.EndMap":
+		var mapInfo structs.TMSMapInfo
+		if err := convertToStruct(parameters[0], &mapInfo); err != nil {
+			return
+		}
+		client.invokeEvents(client.OnEndMap, events.MapEventArgs{
+			Map: mapInfo,
+		})
+	case "ManiaPlanet.EndMatch":
+		var rankings []structs.TMSPlayerRanking
+		if err := convertToStruct(parameters[0], &rankings); err != nil {
+			return
+		}
+		client.invokeEvents(client.OnEndMatch, events.EndMatchEventArgs{
+			Rankings:   rankings,
+			WinnerTeam: parameters[1].(int),
+		})
+	case "ManiaPlanet.MapListModified":
+		client.invokeEvents(client.OnMapListModified, events.MapListModifiedEventArgs{
+			CurMapIndex:    parameters[0].(int),
+			NextMapIndex:   parameters[1].(int),
+			IsListModified: parameters[2].(bool),
+		})
+	case "ManiaPlanet.PlayerAlliesChanged":
+		client.invokeEvents(client.OnPlayerAlliesChanged, events.PlayerAlliesChangedEventArgs{
+			Login: parameters[0].(string),
+		})
+	case "ManiaPlanet.PlayerChat":
+		client.invokeEvents(client.OnPlayerChat, events.PlayerChatEventArgs{
+			PlayerUid:      parameters[0].(int),
+			Login:          parameters[1].(string),
+			Text:           parameters[2].(string),
+			IsRegistredCmd: parameters[3].(bool),
+			Options:        parameters[4].(int),
+		})
+	case "ManiaPlanet.PlayerConnect":
+		client.invokeEvents(client.OnPlayerConnect, events.PlayerConnectEventArgs{
+			Login:       parameters[0].(string),
+			IsSpectator: parameters[1].(bool),
+		})
+	case "ManiaPlanet.PlayerDisconnect":
+		client.invokeEvents(client.OnPlayerDisconnect, events.PlayerDisconnectEventArgs{
+			Login:  parameters[0].(string),
+			Reason: parameters[1].(string),
+		})
+	case "ManiaPlanet.PlayerInfoChanged":
+		var playerInfo structs.TMSPlayerInfo
+		if err := convertToStruct(parameters[0], &playerInfo); err != nil {
+			return
+		}
+		client.invokeEvents(client.OnPlayerInfoChanged, events.PlayerInfoChangedEventArgs{
+			PlayerInfo: playerInfo,
+		})
+	case "ManiaPlanet.PlayerManialinkPageAnswer":
+		var entries []structs.TMSEntryVal
+		if err := convertToStruct(parameters[3], &entries); err != nil {
+			return
+		}
+		client.invokeEvents(client.OnPlayerManialinkPageAnswer, events.PlayerManialinkPageAnswerEventArgs{
+			PlayerUid: parameters[0].(int),
+			Login:     parameters[1].(string),
+			Answer:    parameters[2].(string),
+			Entries:   entries,
+		})
+	case "ManiaPlanet.ServerStart":
+		client.invokeEventsNoArgs(client.OnServerStart)
+	case "ManiaPlanet.ServerStop":
+		client.invokeEventsNoArgs(client.OnServerStop)
+	case "ManiaPlanet.StatusChanged":
+		client.invokeEvents(client.OnStatusChanged, events.StatusChangedEventArgs{
+			StatusCode: parameters[0].(int),
+			StatusName: parameters[1].(string),
+		})
+	case "ManiaPlanet.TunnelDataReceived":
+		client.invokeEvents(client.OnTunnelDataReceived, events.TunnelDataReceivedEventArgs{
+			PlayerUid: parameters[0].(int),
+			Login:     parameters[1].(string),
+			Data:      parameters[2].([]byte),
+		})
+	case "ManiaPlanet.VoteUpdated":
+		client.invokeEvents(client.OnVoteUpdated, events.VoteUpdatedEventArgs{
+			StateName: parameters[0].(string),
+			Login:     parameters[1].(string),
+			CmdName:   parameters[2].(string),
+			CmdParam:  parameters[3].(string),
+		})
+	case "Trackmania.PlayerCheckpoint":
+		client.invokeEvents(client.OnPlayerCheckpoint, events.PlayerCheckpointEventArgs{
+			PlayerUid:       parameters[0].(int),
+			Login:           parameters[1].(string),
+			TimeOrScore:     parameters[2].(int),
+			CurLap:          parameters[3].(int),
+			CheckpointIndex: parameters[4].(int),
+		})
+	case "Trackmania.PlayerFinish":
+		client.invokeEvents(client.OnPlayerFinish, events.PlayerFinishEventArgs{
+			PlayerUid:   parameters[0].(int),
+			Login:       parameters[1].(string),
+			TimeOrScore: parameters[2].(int),
+		})
+	case "Trackmania.PlayerIncoherence":
+		client.invokeEvents(client.OnPlayerIncoherence, events.PlayerIncoherenceEventArgs{
+			PlayerUid: parameters[0].(int),
+			Login:     parameters[1].(string),
+		})
+	}
+
+	client.invokeEvents(client.OnAnyCallback, CallbackEventArgs{
+		Method:     method,
+		Parameters: parameters,
+	})
+}
+
+// invokeEvents calls all event handlers dynamically
+func (client *GbxClient) invokeEvents(events interface{}, args interface{}) {
+	v := reflect.ValueOf(events)
+
+	// Ensure `events` is a slice
+	if v.Kind() != reflect.Slice {
+		fmt.Println("Error: events is not a slice")
+		return
+	}
+
+	for i := 0; i < v.Len(); i++ {
+		handler := v.Index(i)
+
+		// Ensure handler is a function
+		if handler.Kind() != reflect.Func {
+			fmt.Println("Error: event handler is not a function")
+			continue
+		}
+
+		// Call the function dynamically with client and args
+		handler.Call([]reflect.Value{reflect.ValueOf(client), reflect.ValueOf(args)})
+	}
+}
+
+func (client *GbxClient) invokeEventsNoArgs(events interface{}) {
+	v := reflect.ValueOf(events)
+
+	// Ensure `events` is a slice
+	if v.Kind() != reflect.Slice {
+		fmt.Println("Error: events is not a slice")
+		return
+	}
+
+	for i := 0; i < v.Len(); i++ {
+		handler := v.Index(i)
+
+		// Ensure handler is a function
+		if handler.Kind() != reflect.Func {
+			fmt.Println("Error: event handler is not a function")
+			continue
+		}
+
+		// Call the function dynamically with client
+		handler.Call([]reflect.Value{reflect.ValueOf(client)})
+	}
 }

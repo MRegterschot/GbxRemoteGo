@@ -98,3 +98,25 @@ type TMPlayerScore struct {
 	PlayerId int `json:"PlayerId" xmlrpc:"PlayerId"`
 	Score    int `json:"Score" xmlrpc:"Score"`
 }
+
+type TMSPlayerInfo struct {
+	Login           string `json:"Login" xmlrpc:"Login"`
+	NickName        string `json:"NickName" xmlrpc:"NickName"`
+	PlayerId        int    `json:"PlayerId" xmlrpc:"PlayerId"`
+	TeamId          int    `json:"TeamId" xmlrpc:"TeamId"`
+	SpectatorStatus int    `json:"SpectatorStatus" xmlrpc:"SpectatorStatus"`
+	LadderRanking   int    `json:"LadderRanking" xmlrpc:"LadderRanking"`
+	Flags           int    `json:"Flags" xmlrpc:"Flags"`
+}
+
+type TMSPlayerRanking struct {
+	Login           string  `json:"Login" xmlrpc:"Login"`
+	NickName        string  `json:"NickName" xmlrpc:"NickName"`
+	PlayerId        int     `json:"PlayerId" xmlrpc:"PlayerId"`
+	Rank            int     `json:"Rank" xmlrpc:"Rank"`
+	BestTime        int     `json:"BestTime" xmlrpc:"BestTime"`
+	BestCheckpoints []int   `json:"BestCheckpoints" xmlrpc:"BestCheckpoints"`
+	Score           int     `json:"Score" xmlrpc:"Score"`
+	NbrLapsFinished int     `json:"NbrLapsFinished" xmlrpc:"NbrLapsFinished"`
+	LadderScore     float32 `json:"LadderScore" xmlrpc:"LadderScore"`
+}

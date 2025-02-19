@@ -100,7 +100,7 @@ func DeserializeMethodResponse(data []byte) (interface{}, error) {
 	return deserializeValue(param.Value)
 }
 
-func DeserializeMethodCall(data []byte) (string, interface{}, error) {
+func DeserializeMethodCall(data []byte) (string, []interface{}, error) {
 	sanitizedData := sanitizeXML(string(data))
 	if err := checkResponse([]byte(sanitizedData)); err != nil {
 		return "", nil, err
