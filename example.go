@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/MRegterschot/GbxRemoteGo/events"
+	. "github.com/MRegterschot/GbxRemoteGo/gbxclient"
 )
 
 func main() {

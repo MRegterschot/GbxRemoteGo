@@ -1,4 +1,4 @@
-package main
+package gbxclient
 
 import "github.com/MRegterschot/GbxRemoteGo/structs"
 
