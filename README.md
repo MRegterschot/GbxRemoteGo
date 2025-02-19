@@ -7,7 +7,7 @@ A package for interacting with the XML-RPC protocol of Trackmania servers.
 Install GbxRemoteGo with Go's package manager
 
 ```bash
-  go get github.com/MRegterschot/GbxRemoteGo
+go get github.com/MRegterschot/GbxRemoteGo
 ```
 
 ## Usage/Examples
@@ -20,6 +20,7 @@ import (
 	"os"
 
 	"github.com/MRegterschot/GbxRemoteGo/events"
+	. "github.com/MRegterschot/GbxRemoteGo/gbxclient"
 )
 
 func main() {
