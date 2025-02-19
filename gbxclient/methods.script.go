@@ -66,3 +66,15 @@ func (client *GbxClient) SetModeScriptSettings(settings map[string]interface{}) 
 	_, err := client.Call("SetModeScriptSettings", settings)
 	return err
 }
+
+// Send an event to the mode script. Only available to Admin.
+func (client *GbxClient) TriggerModeScriptEvent(method string, param string) error {
+	_, err := client.Call("TriggerModeScriptEvent", method, param)
+	return err
+}
+
+// Send an event to the mode script. Only available to Admin.
+func (client *GbxClient) TriggerModeScriptEventArray(method string, params []string) error {
+	_, err := client.Call("TriggerModeScriptEventArray", method, params)
+	return err
+}
