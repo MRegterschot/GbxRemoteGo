@@ -1,8 +1,6 @@
-
 # GbxRemoteGo
 
 A package for interacting with the XML-RPC protocol of Trackmania servers.
-
 
 ## Installation
 
@@ -11,7 +9,7 @@ Install GbxRemoteGo with Go's package manager
 ```bash
   go get github.com/MRegterschot/GbxRemoteGo
 ```
-    
+
 ## Usage/Examples
 
 ```go
