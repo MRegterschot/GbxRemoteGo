@@ -86,7 +86,7 @@ func DeserializeMethodResponse(data []byte) (interface{}, error) {
 	// If fault is present, handle it
 	if methodResponse.Fault != nil {
 		if methodResponse.Fault.FaultCode != nil && methodResponse.Fault.FaultString != nil {
-			return nil, fmt.Errorf("FaultCode: %d, FaultString: %s", *methodResponse.Fault.FaultCode, *methodResponse.Fault.FaultString)
+			return nil, errors.New(*methodResponse.Fault.FaultString)
 		}
 		return nil, errors.New("fault found but missing details")
 	}
