@@ -132,7 +132,7 @@ func (g *GbxClient) handleData(data []byte) {
 						fmt.Println("Error:", err)
 					} else {
 						// Emit callback event
-						g.handleCallback(method, parameters)
+						go g.handleCallback(method, parameters)
 					}
 				}
 			}
