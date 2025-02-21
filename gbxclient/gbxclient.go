@@ -161,9 +161,9 @@ func (client *GbxClient) sendRequest(xmlString string, wait bool) PromiseResult 
 			client.Mutex.Unlock()
 			return PromiseResult{nil, err}
 		}
-	} else {
-		client.Mutex.Unlock()
 	}
+		
+	client.Mutex.Unlock()
 
 	len := len(xmlString)
 	buf := make([]byte, 8+len)
