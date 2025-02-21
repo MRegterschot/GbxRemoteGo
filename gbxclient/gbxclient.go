@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"time"
 
 	"github.com/MRegterschot/GbxRemoteGo/events"
 	"github.com/MRegterschot/GbxRemoteGo/structs"
@@ -160,8 +161,9 @@ func (client *GbxClient) sendRequest(xmlString string, wait bool) PromiseResult 
 			client.Mutex.Unlock()
 			return PromiseResult{nil, err}
 		}
+	} else {
+		client.Mutex.Unlock()
 	}
-	client.Mutex.Unlock()
 
 	len := len(xmlString)
 	buf := make([]byte, 8+len)
@@ -171,7 +173,6 @@ func (client *GbxClient) sendRequest(xmlString string, wait bool) PromiseResult 
 	binary.LittleEndian.PutUint32(buf[4:], handle)
 	// Copy XML string into the buffer at offset 8
 	copy(buf[8:], []byte(xmlString))
-
 	_, err := client.Socket.Write(buf)
 	if err != nil {
 		client.Mutex.Lock()
@@ -185,12 +186,19 @@ func (client *GbxClient) sendRequest(xmlString string, wait bool) PromiseResult 
 	}
 
 	ch := client.PromiseCallbacks[handle]
-	res := <-ch
-	client.Mutex.Lock()
-	delete(client.PromiseCallbacks, handle)
-	client.Mutex.Unlock()
 
-	return res
+	select {
+	case res := <-ch:
+		client.Mutex.Lock()
+		delete(client.PromiseCallbacks, handle)
+		client.Mutex.Unlock()
+		return res
+	case <-time.After(5 * time.Second):
+		client.Mutex.Lock()
+		delete(client.PromiseCallbacks, handle)
+		client.Mutex.Unlock()
+		return PromiseResult{nil, errors.New("request timed out after 5s")}
+	}
 }
 
 func (client *GbxClient) handleCallback(method string, parameters []interface{}) {
