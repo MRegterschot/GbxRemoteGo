@@ -307,11 +307,16 @@ func (client *GbxClient) handleCallback(method string, parameters []interface{})
 	case "ManiaPlanet.ModeScriptCallbackArray":
 		switch parameters[0].(string) {
 		case "Trackmania.Event.WayPoint":
-			eventArgs := parameters[1].([]events.PlayerWayPointEventArgs)[0]
-			if eventArgs.IsEndRace {
-				client.invokeEvents(client.OnPlayerFinish, eventArgs)
+			var waypoints []events.PlayerWayPointEventArgs
+
+			if err := convertToStruct(parameters[1], &waypoints); err != nil {
+				return
+			}
+
+			if waypoints[0].IsEndRace {
+				client.invokeEvents(client.OnPlayerFinish, waypoints[0])
 			} else {
-				client.invokeEvents(client.OnPlayerCheckpoint, eventArgs)
+				client.invokeEvents(client.OnPlayerCheckpoint, waypoints[0])
 			}
 		}
 	case "Trackmania.PlayerIncoherence":
