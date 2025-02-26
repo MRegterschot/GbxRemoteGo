@@ -307,7 +307,7 @@ func (client *GbxClient) handleCallback(method string, parameters []interface{})
 	case "ManiaPlanet.ModeScriptCallbackArray":
 		switch parameters[0].(string) {
 		case "Trackmania.Event.WayPoint":
-			eventArgs := parameters[1].(events.PlayerWayPointEventArgs)
+			eventArgs := parameters[1].([]events.PlayerWayPointEventArgs)[0]
 			if eventArgs.IsEndRace {
 				client.invokeEvents(client.OnPlayerFinish, eventArgs)
 			} else {
