@@ -27,23 +27,27 @@ const (
 	ScriptRoyal      TMScriptMode = "Trackmania/TM_RoyalTimeAttack_Online.Script.txt"
 	ScriptStunt      TMScriptMode = "Trackmania/TM_StuntMulti_Online.Script.txt"
 	ScriptPlatform   TMScriptMode = "Trackmania/TM_Platform_Online.Script.txt"
+	ScriptTMWC       TMScriptMode = "TrackMania/TM_TMWC2023_Online.Script.txt"
+	ScriptTMWT       TMScriptMode = "TrackMania/TM_TMWTTeams_Online.Script.txt"
 )
 
 // Map of user input to script filenames
 var scriptMap = map[string]TMScriptMode{
-	"ta":        ScriptTimeAttack,
+	"ta":         ScriptTimeAttack,
 	"timeattack": ScriptTimeAttack,
-	"laps":      ScriptLaps,
-	"rounds":    ScriptRounds,
-	"cup":       ScriptCup,
-	"team":      ScriptTeams,
-	"teams":     ScriptTeams,
-	"ko":        ScriptKnockout,
-	"knockout":  ScriptKnockout,
-	"champion":  ScriptChampion,
-	"royal":     ScriptRoyal,
-	"stunt":     ScriptStunt,
-	"platform":  ScriptPlatform,
+	"laps":       ScriptLaps,
+	"rounds":     ScriptRounds,
+	"cup":        ScriptCup,
+	"team":       ScriptTeams,
+	"teams":      ScriptTeams,
+	"ko":         ScriptKnockout,
+	"knockout":   ScriptKnockout,
+	"champion":   ScriptChampion,
+	"royal":      ScriptRoyal,
+	"stunt":      ScriptStunt,
+	"platform":   ScriptPlatform,
+	"tmwc":       ScriptTMWC,
+	"tmwt":       ScriptTMWT,
 }
 
 // Convert user input into a valid script mode (or return empty if not found)
