@@ -303,6 +303,26 @@ func convertToStruct(res interface{}, targetType interface{}) error {
 			return err
 		}
 
+	case interface{}:
+		// Handle single interface
+		// Convert the interface to JSON
+		jsonData, err := json.Marshal(v)
+		if err != nil {
+			return err
+		}
+
+		// Ensure targetType is a pointer to a struct (e.g., *MyStruct)
+		targetVal := reflect.ValueOf(targetType)
+		if targetVal.Kind() != reflect.Ptr || targetVal.Elem().Kind() != reflect.Struct {
+			return errors.New("target type must be a pointer to a struct")
+		}
+
+		// Unmarshal JSON into the target struct
+		err = json.Unmarshal(jsonData, targetType)
+		if err != nil {
+			return err
+		}
+
 	case []interface{}:
 		// Handle slice of interfaces
 		// Convert the slice to JSON

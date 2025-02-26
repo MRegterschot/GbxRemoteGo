@@ -3,6 +3,7 @@ package gbxclient
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -162,7 +163,7 @@ func (client *GbxClient) sendRequest(xmlString string, wait bool) PromiseResult 
 			return PromiseResult{nil, err}
 		}
 	}
-		
+
 	client.Mutex.Unlock()
 
 	len := len(xmlString)
@@ -307,16 +308,16 @@ func (client *GbxClient) handleCallback(method string, parameters []interface{})
 	case "ManiaPlanet.ModeScriptCallbackArray":
 		switch parameters[0].(string) {
 		case "Trackmania.Event.WayPoint":
-			var waypoints []events.PlayerWayPointEventArgs
+			var waypoint events.PlayerWayPointEventArgs
 
-			if err := convertToStruct(parameters[1], &waypoints); err != nil {
+			if err := convertToStruct(parameters[1], &waypoint); err != nil {
 				return
 			}
 
-			if waypoints[0].IsEndRace {
-				client.invokeEvents(client.OnPlayerFinish, waypoints[0])
+			if waypoint.IsEndRace {
+				client.invokeEvents(client.OnPlayerFinish, waypoint)
 			} else {
-				client.invokeEvents(client.OnPlayerCheckpoint, waypoints[0])
+				client.invokeEvents(client.OnPlayerCheckpoint, waypoint)
 			}
 		}
 	case "Trackmania.PlayerIncoherence":
