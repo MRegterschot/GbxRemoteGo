@@ -190,10 +190,17 @@ func serializeParam(param interface{}) (string, error) {
 		return fmt.Sprintf("<value><string><![CDATA[%s]]></string></value>", v), nil
 	case nil: // Handle nil serialization
 		return "<value><nil/></value>", nil
+	case map[string]interface{}: // Handle maps as structs
+		var members string
+		for key, value := range v {
+			serializedValue, err := serializeParam(value)
+			if err != nil {
+				return "", err
+			}
+			members += fmt.Sprintf("<member><name>%s</name>%s</member>", key, serializedValue)
+		}
+		return fmt.Sprintf("<value><struct>%s</struct></value>", members), nil
 	default:
-		// Handle custom structs using reflection
-		val := reflect.ValueOf(param)
-
 		// Handle slices (arrays)
 		if val.Kind() == reflect.Slice {
 			var values string
