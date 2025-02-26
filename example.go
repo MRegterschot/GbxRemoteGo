@@ -44,7 +44,7 @@ func main() {
 		fmt.Println("Player connected:", args.Login)
 	})
 
-	client.OnPlayerCheckpoint = append(client.OnPlayerCheckpoint, func(client *GbxClient, args events.PlayerCheckpointEventArgs) {
+	client.OnPlayerCheckpoint = append(client.OnPlayerCheckpoint, func(client *GbxClient, args events.PlayerWayPointEventArgs) {
 		fmt.Println("Player checkpoint:", args)
 	})
 

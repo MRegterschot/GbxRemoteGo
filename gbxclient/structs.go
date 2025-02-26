@@ -32,8 +32,8 @@ type GbxCallbacks struct {
 	OnStatusChanged []func(*GbxClient, events.StatusChangedEventArgs)
 	OnTunnelDataReceived []func(*GbxClient, events.TunnelDataReceivedEventArgs)
 	OnVoteUpdated []func(*GbxClient, events.VoteUpdatedEventArgs)
-	OnPlayerCheckpoint []func(*GbxClient, events.PlayerCheckpointEventArgs)
-	OnPlayerFinish []func(*GbxClient, events.PlayerFinishEventArgs)
+	OnPlayerCheckpoint []func(*GbxClient, events.PlayerWayPointEventArgs)
+	OnPlayerFinish []func(*GbxClient, events.PlayerWayPointEventArgs)
 	OnPlayerIncoherence []func(*GbxClient, events.PlayerIncoherenceEventArgs)
 }
 

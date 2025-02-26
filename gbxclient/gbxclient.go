@@ -304,20 +304,16 @@ func (client *GbxClient) handleCallback(method string, parameters []interface{})
 			CmdName:   parameters[2].(string),
 			CmdParam:  parameters[3].(string),
 		})
-	case "Trackmania.PlayerCheckpoint":
-		client.invokeEvents(client.OnPlayerCheckpoint, events.PlayerCheckpointEventArgs{
-			PlayerUid:       parameters[0].(int),
-			Login:           parameters[1].(string),
-			TimeOrScore:     parameters[2].(int),
-			CurLap:          parameters[3].(int),
-			CheckpointIndex: parameters[4].(int),
-		})
-	case "Trackmania.PlayerFinish":
-		client.invokeEvents(client.OnPlayerFinish, events.PlayerFinishEventArgs{
-			PlayerUid:   parameters[0].(int),
-			Login:       parameters[1].(string),
-			TimeOrScore: parameters[2].(int),
-		})
+	case "ManiaPlanet.ModeScriptCallbackArray":
+		switch parameters[0].(string) {
+		case "Trackmania.Event.WayPoint":
+			eventArgs := parameters[1].(events.PlayerWayPointEventArgs)
+			if eventArgs.IsEndRace {
+				client.invokeEvents(client.OnPlayerFinish, eventArgs)
+			} else {
+				client.invokeEvents(client.OnPlayerCheckpoint, eventArgs)
+			}
+		}
 	case "Trackmania.PlayerIncoherence":
 		client.invokeEvents(client.OnPlayerIncoherence, events.PlayerIncoherenceEventArgs{
 			PlayerUid: parameters[0].(int),
