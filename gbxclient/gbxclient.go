@@ -3,6 +3,7 @@ package gbxclient
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -309,7 +310,8 @@ func (client *GbxClient) handleCallback(method string, parameters []interface{})
 		case "Trackmania.Event.WayPoint":
 			var waypoint events.PlayerWayPointEventArgs
 
-			if err := convertToStruct(parameters[1], &waypoint); err != nil {
+			if err := json.Unmarshal([]byte(parameters[1].([]interface{})[0].(string)), &waypoint); err != nil {
+				fmt.Println("Error:", err)
 				return
 			}
 

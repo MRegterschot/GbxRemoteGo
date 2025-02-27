@@ -298,10 +298,7 @@ func convertToStruct(res interface{}, targetType interface{}) error {
 		}
 
 		// Unmarshal JSON into the target struct
-		err = json.Unmarshal(jsonData, targetType)
-		if err != nil {
-			return err
-		}
+		return json.Unmarshal(jsonData, targetType)
 
 	case interface{}:
 		// Handle single interface
@@ -318,36 +315,11 @@ func convertToStruct(res interface{}, targetType interface{}) error {
 		}
 
 		// Unmarshal JSON into the target struct
-		err = json.Unmarshal(jsonData, targetType)
-		if err != nil {
-			return err
-		}
-
-	case []interface{}:
-		// Handle slice of interfaces
-		// Convert the slice to JSON
-		jsonData, err := json.Marshal(v)
-		if err != nil {
-			return err
-		}
-
-		// Ensure targetType is a pointer to a slice (e.g., *[]MyStruct)
-		targetVal := reflect.ValueOf(targetType)
-		if targetVal.Kind() != reflect.Ptr || targetVal.IsNil() {
-			return errors.New("target type must be a non-nil pointer")
-		}
-
-		// Unmarshal JSON into the target slice
-		err = json.Unmarshal(jsonData, targetType)
-		if err != nil {
-			return err
-		}
+		return json.Unmarshal(jsonData, targetType)
 
 	default:
 		return errors.New("unexpected response format")
 	}
-
-	return nil
 }
 
 // Sanitize XML input by removing invalid characters
