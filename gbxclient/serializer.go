@@ -284,7 +284,7 @@ func deserializeValue(value Value) (interface{}, error) {
 func convertToStruct(res interface{}, targetType interface{}) error {
 	// Ensure the response is either map[string]interface{} or []interface{}
 	switch v := res.(type) {
-	case map[string]interface{}:
+	case map[string]interface{}, []interface{}:
 		// Convert map to JSON
 		jsonData, err := json.Marshal(v)
 		if err != nil {
