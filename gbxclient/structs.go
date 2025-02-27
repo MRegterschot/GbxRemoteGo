@@ -13,28 +13,33 @@ type Options struct {
 	ThrowErrors bool
 }
 
+type GbxCallbackStruct[T any] struct {
+	Key  string
+	Call func(*GbxClient, T)
+}
+
 type GbxCallbacks struct {
-	OnAnyCallback []func(*GbxClient, CallbackEventArgs)
-	OnBeginMap []func(*GbxClient, events.MapEventArgs)
-	OnBeginMatch []func(*GbxClient)
-	OnEcho []func(*GbxClient, events.EchoEventArgs)
-	OnEndMap []func(*GbxClient, events.MapEventArgs)
-	OnEndMatch []func(*GbxClient, events.EndMatchEventArgs)
-	OnMapListModified []func(*GbxClient, events.MapListModifiedEventArgs)
-	OnPlayerAlliesChanged []func(*GbxClient, events.PlayerAlliesChangedEventArgs)
-	OnPlayerChat []func(*GbxClient, events.PlayerChatEventArgs)
-	OnPlayerConnect []func(*GbxClient, events.PlayerConnectEventArgs)
-	OnPlayerDisconnect []func(*GbxClient, events.PlayerDisconnectEventArgs)
-	OnPlayerInfoChanged []func(*GbxClient, events.PlayerInfoChangedEventArgs)
-	OnPlayerManialinkPageAnswer []func(*GbxClient, events.PlayerManialinkPageAnswerEventArgs)
-	OnServerStart []func(*GbxClient)
-	OnServerStop []func(*GbxClient)
-	OnStatusChanged []func(*GbxClient, events.StatusChangedEventArgs)
-	OnTunnelDataReceived []func(*GbxClient, events.TunnelDataReceivedEventArgs)
-	OnVoteUpdated []func(*GbxClient, events.VoteUpdatedEventArgs)
-	OnPlayerCheckpoint []func(*GbxClient, events.PlayerWayPointEventArgs)
-	OnPlayerFinish []func(*GbxClient, events.PlayerWayPointEventArgs)
-	OnPlayerIncoherence []func(*GbxClient, events.PlayerIncoherenceEventArgs)
+	OnAnyCallback               []GbxCallbackStruct[CallbackEventArgs]
+	OnBeginMap                  []GbxCallbackStruct[events.MapEventArgs]
+	OnBeginMatch                []GbxCallbackStruct[struct{}] // No args
+	OnEcho                      []GbxCallbackStruct[events.EchoEventArgs]
+	OnEndMap                    []GbxCallbackStruct[events.MapEventArgs]
+	OnEndMatch                  []GbxCallbackStruct[events.EndMatchEventArgs]
+	OnMapListModified           []GbxCallbackStruct[events.MapListModifiedEventArgs]
+	OnPlayerAlliesChanged       []GbxCallbackStruct[events.PlayerAlliesChangedEventArgs]
+	OnPlayerChat                []GbxCallbackStruct[events.PlayerChatEventArgs]
+	OnPlayerConnect             []GbxCallbackStruct[events.PlayerConnectEventArgs]
+	OnPlayerDisconnect          []GbxCallbackStruct[events.PlayerDisconnectEventArgs]
+	OnPlayerInfoChanged         []GbxCallbackStruct[events.PlayerInfoChangedEventArgs]
+	OnPlayerManialinkPageAnswer []GbxCallbackStruct[events.PlayerManialinkPageAnswerEventArgs]
+	OnServerStart               []GbxCallbackStruct[struct{}] // No args
+	OnServerStop                []GbxCallbackStruct[struct{}] // No args
+	OnStatusChanged             []GbxCallbackStruct[events.StatusChangedEventArgs]
+	OnTunnelDataReceived        []GbxCallbackStruct[events.TunnelDataReceivedEventArgs]
+	OnVoteUpdated               []GbxCallbackStruct[events.VoteUpdatedEventArgs]
+	OnPlayerCheckpoint          []GbxCallbackStruct[events.PlayerWayPointEventArgs]
+	OnPlayerFinish              []GbxCallbackStruct[events.PlayerWayPointEventArgs]
+	OnPlayerIncoherence         []GbxCallbackStruct[events.PlayerIncoherenceEventArgs]
 }
 
 type GbxClient struct {
