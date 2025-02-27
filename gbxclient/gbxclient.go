@@ -344,17 +344,33 @@ func (client *GbxClient) invokeEvents(events interface{}, args interface{}) {
 		return
 	}
 
+	// Iterate over each element in the slice (callback struct)
 	for i := 0; i < v.Len(); i++ {
-		handler := v.Index(i)
+		callbackStruct := v.Index(i)
 
-		// Ensure handler is a function
-		if handler.Kind() != reflect.Func {
-			fmt.Println("Error: event handler is not a function")
+		// Ensure that each element in the slice is a GbxCallbackStruct
+		if callbackStruct.Kind() != reflect.Struct {
+			fmt.Println("Error: event handler is not a struct")
 			continue
 		}
 
-		// Call the function dynamically with client and args
-		handler.Call([]reflect.Value{reflect.ValueOf(client), reflect.ValueOf(args)})
+		// Get the `Call` field of the GbxCallbackStruct (it should be a function)
+		callMethod := callbackStruct.FieldByName("Call")
+		if callMethod.Kind() != reflect.Func {
+			fmt.Println("Error: Call field is not a function")
+			continue
+		}
+
+		// Prepare the arguments for the callback
+		funcArgs := []reflect.Value{reflect.ValueOf(client)}
+
+		// Add the struct argument (args) if provided
+		if args != nil {
+			funcArgs = append(funcArgs, reflect.ValueOf(args))
+		}
+
+		// Call the function dynamically with the prepared arguments
+		callMethod.Call(funcArgs)
 	}
 }
 
@@ -367,16 +383,26 @@ func (client *GbxClient) invokeEventsNoArgs(events interface{}) {
 		return
 	}
 
+	// Iterate over each element in the slice (callback struct)
 	for i := 0; i < v.Len(); i++ {
-		handler := v.Index(i)
+		callbackStruct := v.Index(i)
 
-		// Ensure handler is a function
-		if handler.Kind() != reflect.Func {
-			fmt.Println("Error: event handler is not a function")
+		// Ensure that each element in the slice is a GbxCallbackStruct
+		if callbackStruct.Kind() != reflect.Struct {
+			fmt.Println("Error: event handler is not a struct")
 			continue
 		}
 
-		// Call the function dynamically with client
-		handler.Call([]reflect.Value{reflect.ValueOf(client)})
+		// Get the `Call` field of the GbxCallbackStruct (it should be a function)
+		callMethod := callbackStruct.FieldByName("Call")
+		if callMethod.Kind() != reflect.Func {
+			fmt.Println("Error: Call field is not a function")
+			continue
+		}
+
+		// Call the function dynamically with the client and a default argument of the type T
+		// We're using the zero value for T (i.e., an empty struct{} in this case)
+		zeroValue := reflect.New(callMethod.Type().In(1)).Elem() // Create zero value for T
+		callMethod.Call([]reflect.Value{reflect.ValueOf(client), zeroValue})
 	}
 }
