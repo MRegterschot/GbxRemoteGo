@@ -23,3 +23,38 @@ type VoteUpdatedEventArgs struct {
 	CmdName   string `json:"CmdName" xmlrpc:"CmdName"`
 	CmdParam  string `json:"CmdParam" xmlrpc:"CmdParam"`
 }
+
+type ScoresEventArgs struct {
+	ResponseId   string       `json:"responseid"`
+	Section      string       `json:"section"`
+	UseTeams     bool         `json:"useteams"`
+	WinnerTeam   int          `json:"winnerteam"`
+	WinnerPlayer string       `json:"winnerplayer"`
+	Teams        []TeamArgs   `json:"teams"`
+	Players      []PlayerArgs `json:"players"`
+}
+
+type TeamArgs struct {
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	RoundPoints int    `json:"roundpoints"`
+	MapPoints   int    `json:"mappoints"`
+	MatchPoints int    `json:"matchpoints"`
+}
+
+type PlayerArgs struct {
+	Login               string `json:"login"`
+	AccountId           string `json:"accountid"`
+	Name                string `json:"name"`
+	Team                int    `json:"team"`
+	Rank                int    `json:"rank"`
+	RoundPoints         int    `json:"roundpoints"`
+	MapPoints           int    `json:"mappoints"`
+	MatchPoints         int    `json:"matchpoints"`
+	BestRaceTime        int    `json:"bestracetime"`
+	BestRaceCheckpoints []int  `json:"bestracecheckpoints"`
+	BestLapTime         int    `json:"bestlaptime"`
+	BestLapCheckpoints  []int  `json:"bestlapcheckpoints"`
+	PrevRaceTime        int    `json:"prevracetime"`
+	PrevRaceCheckpoints []int  `json:"prevracecheckpoints"`
+}

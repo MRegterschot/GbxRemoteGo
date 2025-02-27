@@ -320,6 +320,17 @@ func (client *GbxClient) handleCallback(method string, parameters []interface{})
 			} else {
 				client.invokeEvents(client.OnPlayerCheckpoint, waypoint)
 			}
+		case "Trackmania.Scores":
+			var scores events.ScoresEventArgs
+
+			if err := json.Unmarshal([]byte(parameters[1].([]interface{})[0].(string)), &scores); err != nil {
+				fmt.Println("Error:", err)
+				return
+			}
+
+			if scores.Section == "EndRound" {
+				client.invokeEvents(client.OnEndRound, scores)
+			}
 		}
 	case "Trackmania.PlayerIncoherence":
 		client.invokeEvents(client.OnPlayerIncoherence, events.PlayerIncoherenceEventArgs{
