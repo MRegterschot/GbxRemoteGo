@@ -331,6 +331,10 @@ func (client *GbxClient) handleCallback(method string, parameters []interface{})
 			if scores.Section == "EndRound" {
 				client.invokeEvents(client.OnEndRound, scores)
 			}
+
+			if scores.Section == "PreEndRound" {
+				client.invokeEvents(client.OnPreEndRound, scores)
+			}
 		}
 	case "Trackmania.PlayerIncoherence":
 		client.invokeEvents(client.OnPlayerIncoherence, events.PlayerIncoherenceEventArgs{

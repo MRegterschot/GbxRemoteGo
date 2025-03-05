@@ -25,7 +25,8 @@ type GbxCallbacks struct {
 	OnEcho                      []GbxCallbackStruct[events.EchoEventArgs]
 	OnEndMap                    []GbxCallbackStruct[events.MapEventArgs]
 	OnEndMatch                  []GbxCallbackStruct[events.EndMatchEventArgs]
-	OnEndRound                  []GbxCallbackStruct[events.ScoresEventArgs] // No args
+	OnEndRound                  []GbxCallbackStruct[events.ScoresEventArgs]
+	OnPreEndRound               []GbxCallbackStruct[events.ScoresEventArgs]
 	OnMapListModified           []GbxCallbackStruct[events.MapListModifiedEventArgs]
 	OnPlayerAlliesChanged       []GbxCallbackStruct[events.PlayerAlliesChangedEventArgs]
 	OnPlayerChat                []GbxCallbackStruct[events.PlayerChatEventArgs]
