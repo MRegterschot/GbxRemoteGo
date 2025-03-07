@@ -15,7 +15,7 @@ type Options struct {
 
 type GbxCallbackStruct[T any] struct {
 	Key  string
-	Call func(*GbxClient, T)
+	Call func(T)
 }
 
 type GbxCallbacks struct {
@@ -59,6 +59,7 @@ type GbxClient struct {
 	Options          Options
 	PromiseCallbacks map[uint32]chan PromiseResult
 	Events           EventEmitter
+	ScriptCallbacks  map[string][]GbxCallbackStruct[interface{}]
 }
 
 type PromiseResult struct {

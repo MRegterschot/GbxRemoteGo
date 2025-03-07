@@ -30,6 +30,7 @@ func NewGbxClient(options Options) *GbxClient {
 		Events: EventEmitter{
 			events: make(map[string][]chan interface{}),
 		},
+		ScriptCallbacks: make(map[string][]GbxCallbackStruct[interface{}]),
 	}
 }
 
@@ -305,6 +306,11 @@ func (client *GbxClient) handleCallback(method string, parameters []interface{})
 			CmdName:   parameters[2].(string),
 			CmdParam:  parameters[3].(string),
 		})
+	case "Trackmania.PlayerIncoherence":
+		client.invokeEvents(client.OnPlayerIncoherence, events.PlayerIncoherenceEventArgs{
+			PlayerUid: parameters[0].(int),
+			Login:     parameters[1].(string),
+		})
 	case "ManiaPlanet.ModeScriptCallbackArray":
 		switch parameters[0].(string) {
 		case "Trackmania.Event.WayPoint":
@@ -336,11 +342,10 @@ func (client *GbxClient) handleCallback(method string, parameters []interface{})
 				client.invokeEvents(client.OnPreEndRound, scores)
 			}
 		}
-	case "Trackmania.PlayerIncoherence":
-		client.invokeEvents(client.OnPlayerIncoherence, events.PlayerIncoherenceEventArgs{
-			PlayerUid: parameters[0].(int),
-			Login:     parameters[1].(string),
-		})
+
+		for _, cb := range client.ScriptCallbacks[parameters[0].(string)] {
+			cb.Call(parameters[1])
+		}
 	}
 
 	client.invokeEvents(client.OnAnyCallback, CallbackEventArgs{
@@ -377,7 +382,7 @@ func (client *GbxClient) invokeEvents(events interface{}, args interface{}) {
 		}
 
 		// Prepare the arguments for the callback
-		funcArgs := []reflect.Value{reflect.ValueOf(client)}
+		funcArgs := []reflect.Value{}
 
 		// Add the struct argument (args) if provided
 		if args != nil {
@@ -415,9 +420,9 @@ func (client *GbxClient) invokeEventsNoArgs(events interface{}) {
 			continue
 		}
 
-		// Call the function dynamically with the client and a default argument of the type T
+		// Call the function dynamically with the default argument of the type T
 		// We're using the zero value for T (i.e., an empty struct{} in this case)
 		zeroValue := reflect.New(callMethod.Type().In(1)).Elem() // Create zero value for T
-		callMethod.Call([]reflect.Value{reflect.ValueOf(client), zeroValue})
+		callMethod.Call([]reflect.Value{zeroValue})
 	}
 }

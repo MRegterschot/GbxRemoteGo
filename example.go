@@ -42,19 +42,19 @@ func main() {
 	// Register gbx callback handlers
 	client.OnPlayerConnect = append(client.OnPlayerConnect, GbxCallbackStruct[events.PlayerConnectEventArgs]{
 		Key: "1",
-		Call: func(client *GbxClient, args events.PlayerConnectEventArgs) {
+		Call: func(args events.PlayerConnectEventArgs) {
 			fmt.Println("Player connected:", args.Login)
 		}})
 
 	client.OnPlayerCheckpoint = append(client.OnPlayerCheckpoint, GbxCallbackStruct[events.PlayerWayPointEventArgs]{
 		Key: "2",
-		Call: func(client *GbxClient, args events.PlayerWayPointEventArgs) {
+		Call: func(args events.PlayerWayPointEventArgs) {
 			fmt.Println("Player checkpoint:", args)
 		}})
 
 	client.OnAnyCallback = append(client.OnAnyCallback, GbxCallbackStruct[CallbackEventArgs]{
 		Key: "3",
-		Call: func(client *GbxClient, args CallbackEventArgs) {
+		Call: func(args CallbackEventArgs) {
 			fmt.Println("Any callback:", args)
 		}})
 

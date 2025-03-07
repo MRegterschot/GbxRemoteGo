@@ -88,3 +88,27 @@ func (e *EventEmitter) On(event string, ch chan interface{}) {
 	defer e.mu.Unlock()
 	e.events[event] = append(e.events[event], ch)
 }
+
+func (client *GbxClient) AddScriptCallback(method string, key string, callback func(interface{})) {
+	if _, exists := client.ScriptCallbacks[method]; !exists {
+		client.ScriptCallbacks[method] = []GbxCallbackStruct[interface{}]{}
+	}
+
+	client.ScriptCallbacks[method] = append(client.ScriptCallbacks[method], GbxCallbackStruct[interface{}]{
+		Key:  key,
+		Call: callback,
+	})
+}
+
+func (client *GbxClient) RemoveScriptCallback(method string, key string) {
+	if _, exists := client.ScriptCallbacks[method]; !exists {
+		return
+	}
+
+	for i, cb := range client.ScriptCallbacks[method] {
+		if cb.Key == key {
+			client.ScriptCallbacks[method] = append(client.ScriptCallbacks[method][:i], client.ScriptCallbacks[method][i+1:]...)
+			return
+		}
+	}
+}
