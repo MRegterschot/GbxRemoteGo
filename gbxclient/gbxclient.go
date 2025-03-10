@@ -54,7 +54,7 @@ func (client *GbxClient) addCallback(id uint32) error {
 }
 
 func (client *GbxClient) listen() {
-	buffer := make([]byte, 8192)
+	buffer := make([]byte, 32768) // 32kb buffer
 
 	for {
 		n, err := client.Socket.Read(buffer)

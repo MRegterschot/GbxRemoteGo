@@ -1,12 +1,12 @@
 package structs
 
 type TMModeScriptInfo struct {
-	Name            string                 `json:"Name" xmlrpc:"Name"`
-	CompatibleTypes string                 `json:"CompatibleTypes" xmlrpc:"CompatibleTypes"`
-	Description     string                 `json:"Description" xmlrpc:"Description"`
-	Version         string                 `json:"Version" xmlrpc:"Version"`
-	ParamDescs      []TMScriptParamDescs   `json:"ParamDescs" xmlrpc:"ParamDescs"`
-	CommandDescs    []TMScriptCommandDescs `json:"CommandDescs" xmlrpc:"CommandDescs"`
+	Name               string                 `json:"Name" xmlrpc:"Name"`
+	CompatibleMapTypes string                 `json:"CompatibleMapTypes" xmlrpc:"CompatibleMapTypes"`
+	Description        string                 `json:"Description" xmlrpc:"Description"`
+	Version            string                 `json:"Version" xmlrpc:"Version"`
+	ParamDescs         []TMScriptParamDescs   `json:"ParamDescs" xmlrpc:"ParamDescs"`
+	CommandDescs       []TMScriptCommandDescs `json:"CommandDescs" xmlrpc:"CommandDescs"`
 }
 
 type TMScriptParamDescs struct {
