@@ -14,11 +14,11 @@ import (
 	"github.com/MRegterschot/GbxRemoteGo/structs"
 )
 
-func NewGbxClient(options Options) *GbxClient {
+func NewGbxClient(host string, port int, options Options) *GbxClient {
 	return &GbxClient{
 		IsConnected:      false,
-		Host:             "127.0.0.1",
-		Port:             5000,
+		Host:             host,
+		Port:             port,
 		Socket:           nil,
 		RecvData:         bytes.Buffer{},
 		ResponseLength:   nil,

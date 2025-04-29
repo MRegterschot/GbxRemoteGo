@@ -10,7 +10,7 @@ import (
 
 func main() {
 	// Create a new GbxClient
-	client := NewGbxClient(Options{})
+	client := NewGbxClient("127.0.0.1", 5000, Options{})
 
 	// Register event handlers
 	onConnectionChan := make(chan interface{})
@@ -22,7 +22,7 @@ func main() {
 	go handleDisconnect(onDisconnectChan)
 
 	// Connect to the server
-	if err := client.Connect("127.0.0.1", 5000); err != nil {
+	if err := client.Connect(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}

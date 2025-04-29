@@ -7,17 +7,15 @@ import (
 	"time"
 )
 
-func (client *GbxClient) Connect(host string, port int) error {
+func (client *GbxClient) Connect() error {
 	var err error
-	client.Host = host
-	client.Port = port
 
 	id := uint32(0)
 	if err := client.addCallback(id); err != nil {
 		return err
 	}
 
-	client.Socket, err = net.Dial("tcp", fmt.Sprintf("%s:%d", client.Host, client.Port))
+	client.Socket, err = net.Dial("tcp", net.JoinHostPort(client.Host, fmt.Sprintf("%d", client.Port)))
 	if err != nil {
 		return err
 	}
@@ -32,8 +30,8 @@ func (client *GbxClient) Connect(host string, port int) error {
 	select {
 	case response := <-client.PromiseCallbacks[id]:
 		delete(client.PromiseCallbacks, id) // Clean up callback
-		if err, ok := response.Error.(error); ok {
-			return err // Connection failed
+		if response.Error != nil {
+			return response.Error // Connection failed
 		}
 		client.Events.emit("connect", true)
 		// Connection successful, return nil
