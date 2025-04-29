@@ -64,6 +64,7 @@ func (client *GbxClient) listen() {
 				client.Socket = nil
 			}
 			client.Events.emit("disconnect", err.Error())
+			delete(client.PromiseCallbacks, uint32(0)) // Clean up callback
 			return
 		}
 		client.handleData(buffer[:n]) // Pass only received data
