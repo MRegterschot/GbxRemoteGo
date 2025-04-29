@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"reflect"
 	"time"
 
@@ -59,10 +58,12 @@ func (client *GbxClient) listen() {
 	for {
 		n, err := client.Socket.Read(buffer)
 		if err != nil {
-			if err == io.EOF {
-				client.IsConnected = false
-				return
+			client.IsConnected = false
+			if client.Socket != nil {
+				client.Socket.Close()
+				client.Socket = nil
 			}
+			client.Events.emit("disconnect", err.Error())
 			return
 		}
 		client.handleData(buffer[:n]) // Pass only received data
