@@ -10,18 +10,19 @@ import (
 func (client *GbxClient) Connect() error {
 	var err error
 
-	id := uint32(0)
-	if err := client.addCallback(id); err != nil {
-		return err
-	}
-
-	client.Socket, err = net.Dial("tcp", net.JoinHostPort(client.Host, fmt.Sprintf("%d", client.Port)))
+	dialTimeout := 5 * time.Second
+	client.Socket, err = net.DialTimeout("tcp", net.JoinHostPort(client.Host, fmt.Sprintf("%d", client.Port)), dialTimeout)
 	if err != nil {
 		return err
 	}
 	if tcpConn, ok := client.Socket.(*net.TCPConn); ok {
 		tcpConn.SetKeepAlive(true)
 		tcpConn.SetKeepAlivePeriod(30 * time.Second)
+	}
+
+	id := uint32(0)
+	if err := client.addCallback(id); err != nil {
+		return err
 	}
 
 	go client.listen()
