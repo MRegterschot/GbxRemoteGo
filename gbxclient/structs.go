@@ -44,6 +44,10 @@ type GbxCallbacks struct {
 	OnPlayerIncoherence         []GbxCallbackStruct[events.PlayerIncoherenceEventArgs]
 	OnPlayerGiveUp              []GbxCallbackStruct[events.PlayerGiveUpEventArgs]
 	OnStartLine                 []GbxCallbackStruct[events.StartLineEventArgs]
+	OnWarmUpStart               []GbxCallbackStruct[struct{}] // No args
+	OnWarmUpStartRound          []GbxCallbackStruct[events.WarmUpEventArgs]
+	OnWarmUpEndRound            []GbxCallbackStruct[events.WarmUpEventArgs]
+	OnWarmUpEnd                 []GbxCallbackStruct[struct{}] // No args
 }
 
 type GbxClient struct {

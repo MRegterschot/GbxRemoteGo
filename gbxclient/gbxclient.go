@@ -364,6 +364,24 @@ func (client *GbxClient) handleCallback(method string, parameters []any) {
 				return
 			}
 			client.invokeEvents(client.OnStartLine, startLine)
+		case "Trackmania.WarmUp.Start":
+			client.invokeEventsNoArgs(client.OnWarmUpStart)
+		case "Trackmania.WarmUp.StartRound":
+			var warmUpStartRound events.WarmUpEventArgs
+			if err := paramsToStruct(parameters, &warmUpStartRound); err != nil {
+				fmt.Println("Error:", err)
+				return
+			}
+			client.invokeEvents(client.OnWarmUpStartRound, warmUpStartRound)
+		case "Trackmania.WarmUp.EndRound":
+			var warmUpEndRound events.WarmUpEventArgs
+			if err := paramsToStruct(parameters, &warmUpEndRound); err != nil {
+				fmt.Println("Error:", err)
+				return
+			}
+			client.invokeEvents(client.OnWarmUpEndRound, warmUpEndRound)
+		case "Trackmania.WarmUp.End":
+			client.invokeEventsNoArgs(client.OnWarmUpEnd)
 		}
 
 		for _, cb := range client.ScriptCallbacks[parameters[0].(string)] {

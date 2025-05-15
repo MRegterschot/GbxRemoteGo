@@ -64,3 +64,8 @@ type StartLineEventArgs struct {
 	AccountId string `json:"accountid" xmlrpc:"AccountId"`
 	Login     string `json:"login" xmlrpc:"Login"`
 }
+
+type WarmUpEventArgs struct {
+	Current int `json:"current" xmlrpc:"Current"`
+	Total   int `json:"total" xmlrpc:"Total"`
+}
