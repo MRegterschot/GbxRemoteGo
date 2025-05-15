@@ -431,7 +431,7 @@ func (client *GbxClient) invokeEventsNoArgs(events interface{}) {
 
 		// Call the function dynamically with the default argument of the type T
 		// We're using the zero value for T (i.e., an empty struct{} in this case)
-		zeroValue := reflect.New(callMethod.Type().In(1)).Elem() // Create zero value for T
+		zeroValue := reflect.New(callMethod.Type().In(0)).Elem() // Create zero value for T
 		callMethod.Call([]reflect.Value{zeroValue})
 	}
 }
