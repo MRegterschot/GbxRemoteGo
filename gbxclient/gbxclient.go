@@ -382,6 +382,8 @@ func (client *GbxClient) handleCallback(method string, parameters []any) {
 			client.invokeEvents(client.OnWarmUpEndRound, warmUpEndRound)
 		case "Trackmania.WarmUp.End":
 			client.invokeEventsNoArgs(client.OnWarmUpEnd)
+		case "Maniaplanet.StartRound_Start":
+			client.invokeEventsNoArgs(client.OnStartRound)
 		}
 
 		for _, cb := range client.ScriptCallbacks[parameters[0].(string)] {

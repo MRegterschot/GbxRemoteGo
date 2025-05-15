@@ -48,6 +48,7 @@ type GbxCallbacks struct {
 	OnWarmUpStartRound          []GbxCallbackStruct[events.WarmUpEventArgs]
 	OnWarmUpEndRound            []GbxCallbackStruct[events.WarmUpEventArgs]
 	OnWarmUpEnd                 []GbxCallbackStruct[struct{}] // No args
+	OnStartRound                []GbxCallbackStruct[struct{}] // No args
 }
 
 type GbxClient struct {
