@@ -57,3 +57,9 @@ type PlayerIncoherenceEventArgs struct {
 	Login     string `json:"Login" xmlrpc:"Login"`
 	PlayerUid int    `json:"PlayerUid" xmlrpc:"PlayerUid"`
 }
+
+type PlayerGiveUpEventArgs struct {
+	Time      int    `json:"time" xmlrpc:"Time"`
+	Login     string `json:"login" xmlrpc:"Login"`
+	AccountId string `json:"accountid" xmlrpc:"AccountId"`
+}

@@ -42,6 +42,8 @@ type GbxCallbacks struct {
 	OnPlayerCheckpoint          []GbxCallbackStruct[events.PlayerWayPointEventArgs]
 	OnPlayerFinish              []GbxCallbackStruct[events.PlayerWayPointEventArgs]
 	OnPlayerIncoherence         []GbxCallbackStruct[events.PlayerIncoherenceEventArgs]
+	OnPlayerGiveUp              []GbxCallbackStruct[events.PlayerGiveUpEventArgs]
+	OnStartLine                 []GbxCallbackStruct[events.StartLineEventArgs]
 }
 
 type GbxClient struct {

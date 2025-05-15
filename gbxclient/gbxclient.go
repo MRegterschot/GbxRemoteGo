@@ -325,7 +325,7 @@ func (client *GbxClient) handleCallback(method string, parameters []any) {
 		case "Trackmania.Event.WayPoint":
 			var waypoint events.PlayerWayPointEventArgs
 
-			if err := json.Unmarshal([]byte(parameters[1].([]any)[0].(string)), &waypoint); err != nil {
+			if err := paramsToStruct(parameters, &waypoint); err != nil {
 				fmt.Println("Error:", err)
 				return
 			}
@@ -338,7 +338,7 @@ func (client *GbxClient) handleCallback(method string, parameters []any) {
 		case "Trackmania.Scores":
 			var scores events.ScoresEventArgs
 
-			if err := json.Unmarshal([]byte(parameters[1].([]any)[0].(string)), &scores); err != nil {
+			if err := paramsToStruct(parameters, &scores); err != nil {
 				fmt.Println("Error:", err)
 				return
 			}
@@ -350,6 +350,20 @@ func (client *GbxClient) handleCallback(method string, parameters []any) {
 			if scores.Section == "PreEndRound" {
 				client.invokeEvents(client.OnPreEndRound, scores)
 			}
+		case "Trackmania.Event.GiveUp":
+			var giveUp events.PlayerGiveUpEventArgs
+			if err := paramsToStruct(parameters, &giveUp); err != nil {
+				fmt.Println("Error:", err)
+				return
+			}
+			client.invokeEvents(client.OnPlayerGiveUp, giveUp)
+		case "Trackmania.Event.StartLine":
+			var startLine events.StartLineEventArgs
+			if err := paramsToStruct(parameters, &startLine); err != nil {
+				fmt.Println("Error:", err)
+				return
+			}
+			client.invokeEvents(client.OnStartLine, startLine)
 		}
 
 		for _, cb := range client.ScriptCallbacks[parameters[0].(string)] {
@@ -361,6 +375,10 @@ func (client *GbxClient) handleCallback(method string, parameters []any) {
 		Method:     method,
 		Parameters: parameters,
 	})
+}
+
+func paramsToStruct[T any](params []any, out *T) error {
+	return json.Unmarshal([]byte(params[1].([]any)[0].(string)), out)
 }
 
 // invokeEvents calls all event handlers dynamically

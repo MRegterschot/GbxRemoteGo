@@ -58,3 +58,9 @@ type PlayerArgs struct {
 	PrevRaceTime        int    `json:"prevracetime"`
 	PrevRaceCheckpoints []int  `json:"prevracecheckpoints"`
 }
+
+type StartLineEventArgs struct {
+	Time      int    `json:"time" xmlrpc:"Time"`
+	AccountId string `json:"accountid" xmlrpc:"AccountId"`
+	Login     string `json:"login" xmlrpc:"Login"`
+}
