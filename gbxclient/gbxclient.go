@@ -27,17 +27,17 @@ func NewGbxClient(host string, port int, options Options) *GbxClient {
 		Options:          options,
 		PromiseCallbacks: make(map[uint32]chan PromiseResult),
 		Events: EventEmitter{
-			events: make(map[string][]chan interface{}),
+			events: make(map[string][]chan any),
 		},
-		ScriptCallbacks: make(map[string][]GbxCallbackStruct[interface{}]),
+		ScriptCallbacks: make(map[string][]GbxCallbackStruct[any]),
 	}
 }
 
-func (e *EventEmitter) emit(event string, value interface{}) {
+func (e *EventEmitter) emit(event string, value any) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	for _, ch := range e.events[event] {
-		go func(c chan interface{}) {
+		go func(c chan any) {
 			c <- value
 		}(ch)
 	}
@@ -212,7 +212,7 @@ func (client *GbxClient) sendRequest(xmlString string, wait bool) PromiseResult 
 	}
 }
 
-func (client *GbxClient) handleCallback(method string, parameters []interface{}) {
+func (client *GbxClient) handleCallback(method string, parameters []any) {
 	switch method {
 	case "ManiaPlanet.BeginMap":
 		var mapInfo structs.TMSMapInfo
@@ -325,7 +325,7 @@ func (client *GbxClient) handleCallback(method string, parameters []interface{})
 		case "Trackmania.Event.WayPoint":
 			var waypoint events.PlayerWayPointEventArgs
 
-			if err := json.Unmarshal([]byte(parameters[1].([]interface{})[0].(string)), &waypoint); err != nil {
+			if err := json.Unmarshal([]byte(parameters[1].([]any)[0].(string)), &waypoint); err != nil {
 				fmt.Println("Error:", err)
 				return
 			}
@@ -338,7 +338,7 @@ func (client *GbxClient) handleCallback(method string, parameters []interface{})
 		case "Trackmania.Scores":
 			var scores events.ScoresEventArgs
 
-			if err := json.Unmarshal([]byte(parameters[1].([]interface{})[0].(string)), &scores); err != nil {
+			if err := json.Unmarshal([]byte(parameters[1].([]any)[0].(string)), &scores); err != nil {
 				fmt.Println("Error:", err)
 				return
 			}
@@ -364,7 +364,7 @@ func (client *GbxClient) handleCallback(method string, parameters []interface{})
 }
 
 // invokeEvents calls all event handlers dynamically
-func (client *GbxClient) invokeEvents(events interface{}, args interface{}) {
+func (client *GbxClient) invokeEvents(events any, args any) {
 	v := reflect.ValueOf(events)
 
 	// Ensure `events` is a slice
@@ -403,7 +403,7 @@ func (client *GbxClient) invokeEvents(events interface{}, args interface{}) {
 	}
 }
 
-func (client *GbxClient) invokeEventsNoArgs(events interface{}) {
+func (client *GbxClient) invokeEventsNoArgs(events any) {
 	v := reflect.ValueOf(events)
 
 	// Ensure `events` is a slice

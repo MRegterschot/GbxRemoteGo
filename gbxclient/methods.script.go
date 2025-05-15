@@ -46,14 +46,14 @@ func (client *GbxClient) GetModeScriptInfo() (structs.TMModeScriptInfo, error) {
 }
 
 // Returns the current settings of the mode script.
-func (client *GbxClient) GetModeScriptSettings() (map[string]interface{}, error) {
+func (client *GbxClient) GetModeScriptSettings() (map[string]any, error) {
 	res, err := client.Call("GetModeScriptSettings")
 	if err != nil {
 		return nil, err
 	}
 
 	// Ensure the response is a map
-	data, ok := res.(map[string]interface{})
+	data, ok := res.(map[string]any)
 	if !ok {
 		return nil, errors.New("unexpected response format")
 	}
@@ -62,7 +62,7 @@ func (client *GbxClient) GetModeScriptSettings() (map[string]interface{}, error)
 }
 
 // Change the settings of the mode script. Only available to Admin.
-func (client *GbxClient) SetModeScriptSettings(settings map[string]interface{}) error {
+func (client *GbxClient) SetModeScriptSettings(settings map[string]any) error {
 	_, err := client.Call("SetModeScriptSettings", settings)
 	return err
 }

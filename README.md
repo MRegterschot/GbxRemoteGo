@@ -28,11 +28,11 @@ func main() {
 	client := NewGbxClient(Options{})
 
 	// Register event handlers
-	onConnectionChan := make(chan interface{})
+	onConnectionChan := make(chan any)
 	client.Events.On("connect", onConnectionChan)
 	go handleConnect(onConnectionChan)
 
-	onDisconnectChan := make(chan interface{})
+	onDisconnectChan := make(chan any)
 	client.Events.On("disconnect", onDisconnectChan)
 	go handleDisconnect(onDisconnectChan)
 
@@ -70,7 +70,7 @@ func main() {
 	select {}
 }
 
-func handleConnect(eventChan chan interface{}) {
+func handleConnect(eventChan chan any) {
 	for {
 		select {
 		case event := <-eventChan:
@@ -87,7 +87,7 @@ func handleConnect(eventChan chan interface{}) {
 	}
 }
 
-func handleDisconnect(eventChan chan interface{}) {
+func handleDisconnect(eventChan chan any) {
 	for {
 		select {
 		case event := <-eventChan:

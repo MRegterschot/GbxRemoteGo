@@ -67,7 +67,7 @@ type XMLRequest struct {
 	Params     []XMLParam `xml:"params>param"`
 }
 
-func DeserializeMethodResponse(data []byte) (interface{}, error) {
+func DeserializeMethodResponse(data []byte) (any, error) {
 	sanitizedData := sanitizeXML(string(data))
 	if err := checkResponse([]byte(sanitizedData)); err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func DeserializeMethodResponse(data []byte) (interface{}, error) {
 	return deserializeValue(param.Value)
 }
 
-func DeserializeMethodCall(data []byte) (string, []interface{}, error) {
+func DeserializeMethodCall(data []byte) (string, []any, error) {
 	sanitizedData := sanitizeXML(string(data))
 	if err := checkResponse([]byte(sanitizedData)); err != nil {
 		return "", nil, err
@@ -122,7 +122,7 @@ func DeserializeMethodCall(data []byte) (string, []interface{}, error) {
 	}
 
 	// Parse the parameters
-	params := make([]interface{}, len(methodCall.Params))
+	params := make([]any, len(methodCall.Params))
 	for i, param := range methodCall.Params {
 		value, err := deserializeValue(param.Value)
 		if err != nil {
@@ -134,7 +134,7 @@ func DeserializeMethodCall(data []byte) (string, []interface{}, error) {
 	return methodCall.MethodName, params, nil
 }
 
-func xmlSerializer(method string, params []interface{}) (string, error) {
+func xmlSerializer(method string, params []any) (string, error) {
 	var xmlParams []XMLParam
 	for _, param := range params {
 		// Use reflection to handle different types of params
@@ -159,7 +159,7 @@ func xmlSerializer(method string, params []interface{}) (string, error) {
 }
 
 // Helper function to serialize different types
-func serializeParam(param interface{}) (string, error) {
+func serializeParam(param any) (string, error) {
 	// Handle pointers by dereferencing them if not nil
 	val := reflect.ValueOf(param)
 	if val.Kind() == reflect.Ptr {
@@ -190,7 +190,7 @@ func serializeParam(param interface{}) (string, error) {
 		return fmt.Sprintf("<value><string><![CDATA[%s]]></string></value>", v), nil
 	case nil: // Handle nil serialization
 		return "<value><nil/></value>", nil
-	case map[string]interface{}: // Handle maps as structs
+	case map[string]any: // Handle maps as structs
 		var members string
 		for key, value := range v {
 			serializedValue, err := serializeParam(value)
@@ -239,7 +239,7 @@ func serializeParam(param interface{}) (string, error) {
 }
 
 // Recursive function to handle deserialization of a single value
-func deserializeValue(value Value) (interface{}, error) {
+func deserializeValue(value Value) (any, error) {
 	switch {
 	case value.String != nil:
 		return *value.String, nil
@@ -251,7 +251,7 @@ func deserializeValue(value Value) (interface{}, error) {
 		return *value.Float, nil
 	case value.Struct != nil:
 		// Handle structs by converting to a map
-		parsedData := make(map[string]interface{})
+		parsedData := make(map[string]any)
 		for _, member := range value.Struct.Members {
 			memberValue, err := deserializeValue(member.Value) // Recursively deserialize each member's value
 			if err != nil {
@@ -262,7 +262,7 @@ func deserializeValue(value Value) (interface{}, error) {
 		return parsedData, nil
 	case value.Array != nil:
 		// Handle arrays, process each element in the array
-		parsedArray := make([]interface{}, len(value.Array.Data))
+		parsedArray := make([]any, len(value.Array.Data))
 		for i, item := range value.Array.Data {
 			itemValue, err := deserializeValue(item) // Recursively deserialize array items
 			if err != nil {
@@ -281,10 +281,10 @@ func deserializeValue(value Value) (interface{}, error) {
 }
 
 // Generic function to convert response to a specific type
-func convertToStruct(res interface{}, targetType interface{}) error {
-	// Ensure the response is either map[string]interface{} or []interface{}
+func convertToStruct(res any, targetType any) error {
+	// Ensure the response is either map[string]any or []any
 	switch v := res.(type) {
-	case map[string]interface{}, []interface{}:
+	case map[string]any, []any:
 		// Convert map to JSON
 		jsonData, err := json.Marshal(v)
 		if err != nil {
@@ -300,7 +300,7 @@ func convertToStruct(res interface{}, targetType interface{}) error {
 		// Unmarshal JSON into the target struct
 		return json.Unmarshal(jsonData, targetType)
 
-	case interface{}:
+	case any:
 		// Handle single interface
 		// Convert the interface to JSON
 		jsonData, err := json.Marshal(v)

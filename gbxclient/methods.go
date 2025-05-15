@@ -46,7 +46,7 @@ func (client *GbxClient) Connect() error {
 	}
 }
 
-func (client *GbxClient) Call(method string, params ...interface{}) (interface{}, error) {
+func (client *GbxClient) Call(method string, params ...any) (any, error) {
 	if !client.IsConnected {
 		return nil, errors.New("not connected")
 	}
@@ -60,7 +60,7 @@ func (client *GbxClient) Call(method string, params ...interface{}) (interface{}
 	return res.Result, res.Error
 }
 
-func (client *GbxClient) Send(method string, params ...interface{}) (interface{}, error) {
+func (client *GbxClient) Send(method string, params ...any) (any, error) {
 	if !client.IsConnected {
 		return nil, errors.New("not connected")
 	}
@@ -82,18 +82,18 @@ func (client *GbxClient) Disconnect() error {
 	return nil
 }
 
-func (e *EventEmitter) On(event string, ch chan interface{}) {
+func (e *EventEmitter) On(event string, ch chan any) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	e.events[event] = append(e.events[event], ch)
 }
 
-func (client *GbxClient) AddScriptCallback(method string, key string, callback func(interface{})) {
+func (client *GbxClient) AddScriptCallback(method string, key string, callback func(any)) {
 	if _, exists := client.ScriptCallbacks[method]; !exists {
-		client.ScriptCallbacks[method] = []GbxCallbackStruct[interface{}]{}
+		client.ScriptCallbacks[method] = []GbxCallbackStruct[any]{}
 	}
 
-	client.ScriptCallbacks[method] = append(client.ScriptCallbacks[method], GbxCallbackStruct[interface{}]{
+	client.ScriptCallbacks[method] = append(client.ScriptCallbacks[method], GbxCallbackStruct[any]{
 		Key:  key,
 		Call: callback,
 	})

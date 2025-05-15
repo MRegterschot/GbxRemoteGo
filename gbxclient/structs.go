@@ -59,20 +59,20 @@ type GbxClient struct {
 	Options          Options
 	PromiseCallbacks map[uint32]chan PromiseResult
 	Events           EventEmitter
-	ScriptCallbacks  map[string][]GbxCallbackStruct[interface{}]
+	ScriptCallbacks  map[string][]GbxCallbackStruct[any]
 }
 
 type PromiseResult struct {
-	Result interface{}
+	Result any
 	Error  error
 }
 
 type EventEmitter struct {
-	events map[string][]chan interface{}
+	events map[string][]chan any
 	mu     sync.Mutex
 }
 
 type CallbackEventArgs struct {
 	Method     string
-	Parameters interface{}
+	Parameters any
 }

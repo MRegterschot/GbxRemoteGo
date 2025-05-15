@@ -20,7 +20,7 @@ func (client *GbxClient) GetTeamInfo(clanID int) (structs.TMTeamInfo, error) {
 	}
 
 	// Ensure the response is a struct
-	data, ok := res.(map[string]interface{})
+	data, ok := res.(map[string]any)
 	if !ok {
 		return structs.TMTeamInfo{}, errors.New("unexpected response format")
 	}
@@ -49,7 +49,7 @@ func (client *GbxClient) GetForcedClubLinks() (structs.TMForcedClubLinks, error)
 	}
 
 	// Ensure the response is a struct
-	data, ok := res.(map[string]interface{})
+	data, ok := res.(map[string]any)
 	if !ok {
 		return structs.TMForcedClubLinks{}, errors.New("unexpected response format")
 	}

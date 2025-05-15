@@ -71,7 +71,7 @@ type TMLadderStats struct {
 	NbrMatchLosses int             `json:"NbrMatchLosses" xmlrpc:"NbrMatchLosses"`
 	TeamName       string          `json:"TeamName" xmlrpc:"TeamName"`
 	PlayerRankings []TMZoneRanking `json:"PlayerRankings" xmlrpc:"PlayerRankings"`
-	TeamRankings   []interface{}   `json:"TeamRankings" xmlrpc:"TeamRankings"`
+	TeamRankings   []any           `json:"TeamRankings" xmlrpc:"TeamRankings"`
 }
 
 type TMZoneRanking struct {

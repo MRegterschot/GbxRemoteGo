@@ -4,7 +4,7 @@ import "github.com/MRegterschot/GbxRemoteGo/structs"
 
 // Restarts the map with an optional boolean parameter DontClearCupScores
 func (client *GbxClient) RestartMap(dontClearCupScores ...bool) error {
-	var param interface{} = nil
+	var param any = nil
 	if len(dontClearCupScores) > 0 {
 		param = dontClearCupScores[0]
 	}
@@ -14,7 +14,7 @@ func (client *GbxClient) RestartMap(dontClearCupScores ...bool) error {
 
 // Switch to next map with an optional boolean parameter DontClearCupScores
 func (client *GbxClient) NextMap(dontClearCupScores ...bool) error {
-	var param interface{} = nil
+	var param any = nil
 	if len(dontClearCupScores) > 0 {
 		param = dontClearCupScores[0]
 	}

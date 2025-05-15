@@ -23,4 +23,4 @@ type TMScriptCommandDescs struct {
 	Default string `json:"Default" xmlrpc:"Default"`
 }
 
-type TMModeScriptSettings map[string]interface{}
+type TMModeScriptSettings map[string]any

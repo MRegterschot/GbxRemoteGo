@@ -14,7 +14,7 @@ func (client *GbxClient) ListMethods() ([]string, error) {
 	}
 
 	// Ensure the response is a slice
-	data, ok := res.([]interface{})
+	data, ok := res.([]any)
 	if !ok {
 		return nil, errors.New("unexpected response format")
 	}
@@ -52,7 +52,7 @@ func (client *GbxClient) MethodSignature(signature string) ([]structs.TMMethodSi
 	}
 
 	// Ensure the response is a slice
-	data, ok := res.([]interface{})
+	data, ok := res.([]any)
 	if !ok {
 		return nil, errors.New("unexpected response format")
 	}
@@ -65,7 +65,7 @@ func (client *GbxClient) MethodSignature(signature string) ([]structs.TMMethodSi
 			method.ReturnType = ""
 			method.ParamTypes = nil
 		} else {
-			signature := v.([]interface{})
+			signature := v.([]any)
 			method.ReturnType = signature[0].(string)
 
 			if len(signature) > 1 {
