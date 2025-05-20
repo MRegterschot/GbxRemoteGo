@@ -61,8 +61,8 @@ func (client *GbxClient) GetVersion() (structs.TMVersion, error) {
 }
 
 // Just log the parameters and invoke a callback. Can be used to talk to other xmlrpc clients connected, or to make custom votes. If used in a callvote, the first parameter will be used as the vote message on the clients. Only available to Admin.
-func (client *GbxClient) Echo(par1 string, par2 string) error {
-	_, err := client.Call("Echo", par1, par2)
+func (client *GbxClient) Echo(public string, internal string) error {
+	_, err := client.Call("Echo", public, internal)
 	return err
 }
 
