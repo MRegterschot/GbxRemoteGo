@@ -384,6 +384,13 @@ func (client *GbxClient) handleCallback(method string, parameters []any) {
 			client.invokeEventsNoArgs(client.OnWarmUpEnd)
 		case "Maniaplanet.StartRound_Start":
 			client.invokeEventsNoArgs(client.OnStartRound)
+		case "Trackmania.Knockout.Elimination":
+			var elimination events.EliminationEventArgs
+			if err := paramsToStruct(parameters, &elimination); err != nil {
+				fmt.Println("Error:", err)
+				return
+			}
+			client.invokeEvents(client.OnElimination, elimination)
 		}
 
 		for _, cb := range client.ScriptCallbacks[parameters[0].(string)] {

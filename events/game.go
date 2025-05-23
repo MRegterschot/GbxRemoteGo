@@ -69,3 +69,7 @@ type WarmUpEventArgs struct {
 	Current int `json:"current" xmlrpc:"Current"`
 	Total   int `json:"total" xmlrpc:"Total"`
 }
+
+type EliminationEventArgs struct {
+	AccountIds []string `json:"accountids" xmlrpc:"AccountIds"`
+}
