@@ -51,7 +51,9 @@ func (client *GbxClient) addCallback(id uint32) error {
 		return errors.New("callback already exists")
 	}
 
-	client.PromiseCallbacks[id] = make(chan PromiseResult)
+	// Buffered so that handleData, which sends the result while holding Mutex, never blocks on
+	// a caller that has already stopped receiving (see sendRequest's timeout).
+	client.PromiseCallbacks[id] = make(chan PromiseResult, 1)
 	return nil
 }
 
@@ -188,7 +190,8 @@ func (client *GbxClient) sendRequest(xmlString string, wait bool) PromiseResult 
 			client.Mutex.Unlock()
 			return PromiseResult{nil, errors.New("callback already exists")}
 		}
-		client.PromiseCallbacks[handle] = make(chan PromiseResult)
+		// Buffered: see addCallback.
+		client.PromiseCallbacks[handle] = make(chan PromiseResult, 1)
 	}
 
 	client.Mutex.Unlock()
