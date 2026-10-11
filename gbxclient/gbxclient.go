@@ -43,13 +43,11 @@ func (e *EventEmitter) emit(event string, value any) {
 	}
 }
 
-// addCallback registers a promise channel for id and returns it. Callers must wait on the returned
-// channel rather than look it up again later: handleData deletes the entry as it delivers the
-// result, which can happen before the caller gets round to waiting.
+// addCallback registers a promise channel for id and returns it, otherwise an error.
 func (client *GbxClient) addCallback(id uint32) (chan PromiseResult, error) {
 	client.Mutex.Lock()
 	defer client.Mutex.Unlock()
-	
+
 	if _, exists := client.PromiseCallbacks[id]; exists {
 		return nil, errors.New("callback already exists")
 	}
@@ -183,7 +181,6 @@ func (client *GbxClient) sendRequest(xmlString string, wait bool) PromiseResult 
 	}
 	handle := client.ReqHandle
 
-	// Kept rather than looked up after the write: see addCallback.
 	var ch chan PromiseResult
 	if wait {
 		if _, exists := client.PromiseCallbacks[handle]; exists {
@@ -205,7 +202,7 @@ func (client *GbxClient) sendRequest(xmlString string, wait bool) PromiseResult 
 	binary.LittleEndian.PutUint32(buf[4:], handle)
 	// Copy XML string into the buffer at offset 8
 	copy(buf[8:], []byte(xmlString))
-	
+
 	if _, err := client.Socket.Write(buf); err != nil {
 		if wait {
 			client.deleteCallback(handle)

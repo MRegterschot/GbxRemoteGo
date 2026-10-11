@@ -74,26 +74,25 @@ func TestHandleData_ReleasesMutexForLateTimeoutCleanup(t *testing.T) {
 	assertReturns(t, "deleteCallback", func() { client.deleteCallback(0) })
 }
 
-// respondingConn hands the client the response to each request before Write returns: the order a
+// replyDuringWriteConn hands the client the response to each request before Write returns: the order a
 // server on loopback produces whenever listen() wins the race against the caller.
-type respondingConn struct {
-	net.Conn // only Write is used
-	client   *GbxClient
+type replyDuringWriteConn struct {
+	net.Conn
+	client *GbxClient
 }
 
-func (c *respondingConn) Write(b []byte) (int, error) {
+func (c *replyDuringWriteConn) Write(b []byte) (int, error) {
 	handle := binary.LittleEndian.Uint32(b[4:8])
+	// Response happens synchronously in handleData via RecvData buffer, before Write returns, forcing the race.
 	c.client.handleData(frame(methodResponse(handle)))
 	return len(b), nil
 }
 
-// A response can be handled - delivered and its callback deleted - before sendRequest is back from
-// writing the request. sendRequest must still receive it, not look its channel up afterwards, find
-// the entry gone and wait out its timeout on a nil channel.
+// Verifies a response can be handled before sendRequest is back from writing the request.
 func TestCall_ReceivesResponseHandledBeforeWriteReturns(t *testing.T) {
 	client := NewGbxClient("127.0.0.1", 5000, Options{})
 	client.IsConnected = true
-	client.Socket = &respondingConn{client: client}
+	client.Socket = &replyDuringWriteConn{client: client}
 
 	if _, err := client.Call("GetVersion"); err != nil {
 		t.Fatalf("Call: %v", err)
