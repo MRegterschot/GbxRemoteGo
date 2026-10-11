@@ -159,7 +159,7 @@ func (g *GbxClient) handleData(data []byte) {
 					fmt.Println("Error:", err)
 				} else {
 					// Emit callback event
-					go g.handleCallback(method, parameters)
+					g.enqueueCallback(method, parameters)
 				}
 			}
 		}
@@ -221,6 +221,39 @@ func (client *GbxClient) sendRequest(xmlString string, wait bool) PromiseResult 
 	case <-time.After(5 * time.Second):
 		client.deleteCallback(handle)
 		return PromiseResult{nil, errors.New("request timed out after 5s")}
+	}
+}
+
+// enqueueCallback never blocks; a single worker drains the queue so callbacks run in arrival order.
+func (client *GbxClient) enqueueCallback(method string, parameters []any) {
+	client.queueMu.Lock()
+	client.callbackQ = append(client.callbackQ, queuedCallback{method, parameters})
+
+	if client.dispatching {
+		client.queueMu.Unlock()
+		return
+	}
+
+	client.dispatching = true
+	client.queueMu.Unlock()
+	
+	go client.drainCallbacks()
+}
+
+func (client *GbxClient) drainCallbacks() {
+	for {
+		client.queueMu.Lock()
+		if len(client.callbackQ) == 0 {
+			client.dispatching = false
+			client.queueMu.Unlock()
+			return
+		}
+		cb := client.callbackQ[0]
+		client.callbackQ[0] = queuedCallback{}
+		client.callbackQ = client.callbackQ[1:]
+		client.queueMu.Unlock()
+
+		client.handleCallback(cb.method, cb.parameters)
 	}
 }
 

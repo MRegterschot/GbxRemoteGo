@@ -68,6 +68,15 @@ type GbxClient struct {
 	PromiseCallbacks map[uint32]chan PromiseResult
 	Events           EventEmitter
 	ScriptCallbacks  map[string][]GbxCallbackStruct[any]
+
+	queueMu     sync.Mutex
+	callbackQ   []queuedCallback
+	dispatching bool
+}
+
+type queuedCallback struct {
+	method     string
+	parameters []any
 }
 
 type PromiseResult struct {

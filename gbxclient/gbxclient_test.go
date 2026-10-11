@@ -3,6 +3,7 @@ package gbxclient
 import (
 	"encoding/binary"
 	"net"
+	"sync"
 	"testing"
 	"time"
 )
@@ -111,5 +112,51 @@ func assertReturns(t *testing.T, name string, fn func()) {
 	case <-done:
 	case <-time.After(2 * time.Second):
 		t.Fatalf("%s blocked: the promise channel send deadlocked while holding Mutex", name)
+	}
+}
+
+// Callbacks that arrive in one read must reach handlers in the order the server sent them.
+func TestHandleData_DispatchesCallbacksInOrder(t *testing.T) {
+	const pairs = 500
+	client := NewGbxClient("127.0.0.1", 5000, Options{})
+	client.IsConnected = true
+
+	var mu sync.Mutex
+	var order []string
+	done := make(chan struct{})
+	client.OnAnyCallback = append(client.OnAnyCallback, GbxCallbackStruct[CallbackEventArgs]{
+		Call: func(args CallbackEventArgs) {
+			mu.Lock()
+			defer mu.Unlock()
+			order = append(order, args.Method)
+			if len(order) == pairs*2 {
+				close(done)
+			}
+		},
+	})
+
+	// Connected frames are: length of the XML, then handle, then XML.
+	call := func(method string) []byte {
+		xml := `<?xml version="1.0"?><methodCall><methodName>` + method + `</methodName><params></params></methodCall>`
+		buf := binary.LittleEndian.AppendUint32(nil, uint32(len(xml)))
+		buf = binary.LittleEndian.AppendUint32(buf, 1)
+		return append(buf, xml...)
+	}
+	for i := 0; i < pairs; i++ {
+		data := append(call("Test.First"), call("Test.Second")...)
+		client.handleData(data)
+	}
+
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("timed out waiting for callbacks")
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	for i := 0; i < len(order); i += 2 {
+		if order[i] != "Test.First" || order[i+1] != "Test.Second" {
+			t.Fatalf("pair %d handled out of order: %v", i/2, order[i:i+2])
+		}
 	}
 }
