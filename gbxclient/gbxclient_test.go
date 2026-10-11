@@ -2,6 +2,7 @@ package gbxclient
 
 import (
 	"encoding/binary"
+	"net"
 	"testing"
 	"time"
 )
@@ -15,6 +16,15 @@ func frame(payload []byte) []byte {
 	return buf
 }
 
+// methodResponse builds a response payload for handle: the request handle followed by the XML body.
+func methodResponse(handle uint32) []byte {
+	body := []byte(`<?xml version="1.0"?><methodResponse><params><param><value><boolean>1</boolean></value></param></params></methodResponse>`)
+	payload := make([]byte, 4+len(body))
+	binary.LittleEndian.PutUint32(payload[0:], handle)
+	copy(payload[4:], body)
+	return payload
+}
+
 // handleData writes results into the promise channel while holding Mutex. If that send can block,
 // a response that arrives once the caller has stopped receiving - which is exactly what
 // sendRequest/Connect do when their 5s timeout fires - wedges the reader goroutine with the mutex
@@ -25,7 +35,7 @@ func frame(payload []byte) []byte {
 func TestHandleData_DoesNotBlockWhenNobodyIsReceiving(t *testing.T) {
 	t.Run("connect handshake", func(t *testing.T) {
 		client := NewGbxClient("127.0.0.1", 5000, Options{})
-		if err := client.addCallback(0); err != nil {
+		if _, err := client.addCallback(0); err != nil {
 			t.Fatalf("addCallback: %v", err)
 		}
 
@@ -42,19 +52,11 @@ func TestHandleData_DoesNotBlockWhenNobodyIsReceiving(t *testing.T) {
 		client.IsConnected = true
 
 		const handle uint32 = 0x80000001
-		if err := client.addCallback(handle); err != nil {
+		if _, err := client.addCallback(handle); err != nil {
 			t.Fatalf("addCallback: %v", err)
 		}
 
-		// A response frame is the request handle followed by the XML body. The body does not have
-		// to deserialize cleanly - handleData forwards the error over the same channel, which is
-		// the send under test.
-		body := []byte(`<?xml version="1.0"?><methodResponse><params><param><value><boolean>1</boolean></value></param></params></methodResponse>`)
-		payload := make([]byte, 4+len(body))
-		binary.LittleEndian.PutUint32(payload[0:], handle)
-		copy(payload[4:], body)
-
-		client.RecvData.Write(frame(payload))
+		client.RecvData.Write(frame(methodResponse(handle)))
 		assertReturns(t, "handleData", func() { client.handleData(nil) })
 	})
 }
@@ -63,13 +65,38 @@ func TestHandleData_DoesNotBlockWhenNobodyIsReceiving(t *testing.T) {
 // timeout path blocking in deleteCallback while the reader holds it.
 func TestHandleData_ReleasesMutexForLateTimeoutCleanup(t *testing.T) {
 	client := NewGbxClient("127.0.0.1", 5000, Options{})
-	if err := client.addCallback(0); err != nil {
+	if _, err := client.addCallback(0); err != nil {
 		t.Fatalf("addCallback: %v", err)
 	}
 
 	client.RecvData.Write(frame([]byte("GBXRemote 2")))
 	assertReturns(t, "handleData", func() { client.handleData(nil) })
 	assertReturns(t, "deleteCallback", func() { client.deleteCallback(0) })
+}
+
+// replyDuringWriteConn hands the client the response to each request before Write returns: the order a
+// server on loopback produces whenever listen() wins the race against the caller.
+type replyDuringWriteConn struct {
+	net.Conn
+	client *GbxClient
+}
+
+func (c *replyDuringWriteConn) Write(b []byte) (int, error) {
+	handle := binary.LittleEndian.Uint32(b[4:8])
+	// Response happens synchronously in handleData via RecvData buffer, before Write returns, forcing the race.
+	c.client.handleData(frame(methodResponse(handle)))
+	return len(b), nil
+}
+
+// Verifies a response can be handled before sendRequest is back from writing the request.
+func TestCall_ReceivesResponseHandledBeforeWriteReturns(t *testing.T) {
+	client := NewGbxClient("127.0.0.1", 5000, Options{})
+	client.IsConnected = true
+	client.Socket = &replyDuringWriteConn{client: client}
+
+	if _, err := client.Call("GetVersion"); err != nil {
+		t.Fatalf("Call: %v", err)
+	}
 }
 
 // assertReturns fails the test rather than hanging it when fn deadlocks.

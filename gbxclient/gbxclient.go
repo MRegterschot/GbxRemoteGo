@@ -43,24 +43,20 @@ func (e *EventEmitter) emit(event string, value any) {
 	}
 }
 
-func (client *GbxClient) addCallback(id uint32) error {
+// addCallback registers a promise channel for id and returns it, otherwise an error.
+func (client *GbxClient) addCallback(id uint32) (chan PromiseResult, error) {
 	client.Mutex.Lock()
 	defer client.Mutex.Unlock()
-	
+
 	if _, exists := client.PromiseCallbacks[id]; exists {
-		return errors.New("callback already exists")
+		return nil, errors.New("callback already exists")
 	}
 
 	// Buffered so that handleData, which sends the result while holding Mutex, never blocks on
 	// a caller that has already stopped receiving (see sendRequest's timeout).
-	client.PromiseCallbacks[id] = make(chan PromiseResult, 1)
-	return nil
-}
-
-func (client *GbxClient) getCallbackChannel(id uint32) chan PromiseResult {
-	client.Mutex.Lock()
-	defer client.Mutex.Unlock()
-	return client.PromiseCallbacks[id]
+	ch := make(chan PromiseResult, 1)
+	client.PromiseCallbacks[id] = ch
+	return ch, nil
 }
 
 func (client *GbxClient) deleteCallback(id uint32) {
@@ -185,13 +181,15 @@ func (client *GbxClient) sendRequest(xmlString string, wait bool) PromiseResult 
 	}
 	handle := client.ReqHandle
 
+	var ch chan PromiseResult
 	if wait {
 		if _, exists := client.PromiseCallbacks[handle]; exists {
 			client.Mutex.Unlock()
 			return PromiseResult{nil, errors.New("callback already exists")}
 		}
 		// Buffered: see addCallback.
-		client.PromiseCallbacks[handle] = make(chan PromiseResult, 1)
+		ch = make(chan PromiseResult, 1)
+		client.PromiseCallbacks[handle] = ch
 	}
 
 	client.Mutex.Unlock()
@@ -204,7 +202,7 @@ func (client *GbxClient) sendRequest(xmlString string, wait bool) PromiseResult 
 	binary.LittleEndian.PutUint32(buf[4:], handle)
 	// Copy XML string into the buffer at offset 8
 	copy(buf[8:], []byte(xmlString))
-	
+
 	if _, err := client.Socket.Write(buf); err != nil {
 		if wait {
 			client.deleteCallback(handle)
@@ -216,7 +214,6 @@ func (client *GbxClient) sendRequest(xmlString string, wait bool) PromiseResult 
 		return PromiseResult{nil, nil}
 	}
 
-	ch := client.getCallbackChannel(handle)
 	select {
 	case res := <-ch:
 		client.deleteCallback(handle)

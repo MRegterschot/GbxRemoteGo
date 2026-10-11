@@ -21,14 +21,14 @@ func (client *GbxClient) Connect() error {
 	}
 
 	id := uint32(0)
-	if err := client.addCallback(id); err != nil {
+	ch, err := client.addCallback(id)
+	if err != nil {
 		return err
 	}
 
 	go client.listen()
 
 	// Wait for connection confirmation
-	ch := client.getCallbackChannel(id)
 	select {
 	case response := <-ch:
 		client.deleteCallback(id)
